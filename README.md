@@ -1,6 +1,4 @@
-Below is a **clean `README.md` formatted in proper Markdown** so it works correctly on GitHub. You can copy this directly into your repository’s `README.md`.
 
-```markdown
 # Church Management System
 
 A full-stack application designed to digitize church administration processes including membership records, subscriptions, financial tally, events, and content management.
@@ -264,6 +262,3 @@ Under the following conditions:
 - You must state any significant changes made to the code
 
 For more details, see the [LICENSE](LICENSE) file in this repository.
-```
-
-
