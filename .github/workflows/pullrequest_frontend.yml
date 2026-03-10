@@ -1,0 +1,8 @@
+name: Frontend PR Build Check
+
+on:
+  pull_request:
+
+jobs:
+  frontend-build:
+    uses: ./.github/workflows/frontend_build.yml
