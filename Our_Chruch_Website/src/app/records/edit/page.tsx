@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { Suspense, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import RecordsForm from '@/components/RecordsForm'
 import { Person } from '@/types/records'
@@ -8,7 +8,7 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { updatePerson } from '@/store/slices/recordsSlice'
 import { findPersonWithFamily } from '@/utils/records'
 
-export default function EditRecordPage() {
+function EditRecordPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const dispatch = useAppDispatch()
@@ -76,5 +76,22 @@ export default function EditRecordPage() {
         />
       </div>
     </div>
+  )
+}
+
+
+export default function EditRecordPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="app-page">
+          <div className="app-shell">
+            <p className="app-empty-text">Loading...</p>
+          </div>
+        </div>
+      }
+    >
+      <EditRecordPageContent />
+    </Suspense>
   )
 }

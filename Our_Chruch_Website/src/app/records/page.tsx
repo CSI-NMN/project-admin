@@ -1,12 +1,12 @@
 'use client'
 
-import { useMemo, useState, useEffect } from 'react'
+import { Suspense, useMemo, useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Family, Person } from '@/types/records'
 import { useAppSelector } from '@/store/hooks'
 import { buildSearchIndex, matchesRecordSearch } from '@/utils/records'
 
-export default function AdminRecordsPage() {
+function AdminRecordsPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const families = useAppSelector(state => state.records.families)
@@ -319,3 +319,19 @@ export default function AdminRecordsPage() {
 }
 
 
+
+export default function AdminRecordsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="app-page">
+          <div className="app-shell">
+            <p className="app-empty-text">Loading...</p>
+          </div>
+        </div>
+      }
+    >
+      <AdminRecordsPageContent />
+    </Suspense>
+  )
+}

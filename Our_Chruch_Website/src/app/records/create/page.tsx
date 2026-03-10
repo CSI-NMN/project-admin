@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { Suspense, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import RecordsForm from '@/components/RecordsForm'
 import FamilyForm from '@/components/FamilyForm'
@@ -11,7 +11,7 @@ import { buildFamily, buildPerson } from '@/utils/records'
 
 type Step = 'family' | 'person'
 
-export default function CreateRecordPage() {
+function CreateRecordPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const dispatch = useAppDispatch()
@@ -128,5 +128,22 @@ export default function CreateRecordPage() {
         )}
       </div>
     </div>
+  )
+}
+
+
+export default function CreateRecordPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="app-page">
+          <div className="app-shell">
+            <p className="app-empty-text">Loading...</p>
+          </div>
+        </div>
+      }
+    >
+      <CreateRecordPageContent />
+    </Suspense>
   )
 }
