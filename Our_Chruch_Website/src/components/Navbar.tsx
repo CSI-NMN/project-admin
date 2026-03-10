@@ -1,50 +1,59 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 
-type TabType = 'records'
-
-interface NavbarProps {
-  activeTab?: TabType
-  onTabChange?: (tab: TabType) => void
+type Tab = {
+  key: string
+  label: string
+  href: string
 }
 
-export default function Navbar({ activeTab = 'records', onTabChange }: NavbarProps) {
+const tabs: Tab[] = [
+  { key: 'home', label: 'Home', href: '/' },
+  { key: 'records', label: 'Records', href: '/records' },
+  { key: 'filter', label: 'Filter', href: '/filter' },
+  { key: 'admin', label: 'Admin', href: '/admin' },
+  { key: 'accounts', label: 'Accounts', href: '/accounts' },
+]
+
+export default function Navbar() {
   const router = useRouter()
   const pathname = usePathname()
-  
-  const tabs: TabType[] = ['records']
-  const tabLabels: Record<TabType, string> = {
-      records: 'Records',
-}
 
-  const handleTabClick = (tab: TabType) => {
-    if (pathname !== '/records') {
-      router.push('/records')
-    }
-    onTabChange?.(tab)
+  const isActive = (href: string) => {
+    if (href === '/') return pathname === '/'
+    return pathname === href || pathname.startsWith(`${href}/`)
   }
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 border-b border-gray-300 bg-white shadow-sm">
-      <div className="max-w-6xl mx-auto px-6">
-        <div className="flex gap-8">
-          {tabs.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => handleTabClick(tab)}
-              className={`py-4 px-1 font-medium text-sm border-b-2 transition-colors ${
-                activeTab === tab
-                  ? 'border-amber-600 text-amber-600'
-                  : 'border-transparent text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              {tabLabels[tab]}
-            </button>
-          ))}
+    <header className="app-navbar">
+      <div className="app-navbar-shell app-navbar-template-v2">
+        <div className="app-navbar-left">
+          <button className="app-navbar-brand-v2" onClick={() => router.push('/')}>
+            Our Church
+          </button>
+
+          <nav className="app-navbar-tabs-v2" aria-label="Primary">
+            {tabs.map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => router.push(tab.href)}
+                className={`app-navbar-tab-v2 ${isActive(tab.href) ? 'app-navbar-tab-v2-active' : ''}`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </nav>
         </div>
+
+        <button className="app-navbar-user-v2" type="button">
+          <span>Gary Bailey</span>
+          <svg className="app-navbar-caret-v2" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path d="M6 8l4 4 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
       </div>
-    </div>
+    </header>
   )
 }
+

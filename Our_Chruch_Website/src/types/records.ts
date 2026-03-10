@@ -1,3 +1,15 @@
+export interface Family {
+  id: string
+  family_code: string
+  family_name: string
+  residential_address?: string
+  office_address?: string
+  area?: string
+  created_at: string
+  updated_at: string
+  members: Person[]
+}
+
 export interface Person {
   id: string
   subscriptionCardNo: string
@@ -18,16 +30,4 @@ export interface Person {
   relationship_type: string
   is_head: boolean
   familyId: string
-}
-
-export interface Family {
-  id: string
-  family_code: string
-  family_name: string
-  residential_address?: string
-  office_address?: string
-  area?: string
-  created_at: string
-  updated_at: string
-  members: Person[]
 }

@@ -1,0 +1,213 @@
+import { Family, Person } from '@/types/records'
+
+// Global store for mock data
+let globalFamilies: Family[] = [
+  {
+    id: '550e8400-e29b-41d4-a716-446655440000',
+    family_code: 'FAM001',
+    family_name: 'Doe Family',
+    residential_address: '123 Main St, Springfield',
+    office_address: '456 Business Ave, Springfield',
+    area: 'Downtown',
+    created_at: '2024-01-15T10:00:00Z',
+    updated_at: '2024-03-09T14:30:00Z',
+    members: [
+      {
+        id: '550e8400-e29b-41d4-a716-446655440001',
+        subscriptionCardNo: '5341930004628032',
+        first_name: 'John',
+        last_name: 'Doe',
+        father_name: 'Robert Doe',
+        mother_name: 'Mary Doe',
+        gender: 'Male',
+        marital_status: 'Married',
+        date_of_birth: '1980-05-15',
+        date_of_baptism: '1980-06-20',
+        date_of_confirmation: '1995-06-20',
+        date_of_marriage: '2005-08-10',
+        blood_group: 'O+',
+        profession: 'Engineer',
+        mobile_no: '123-456-7890',
+        email: 'john.doe@example.com',
+        relationship_type: 'Head',
+        is_head: true,
+        familyId: '550e8400-e29b-41d4-a716-446655440000'
+      },
+      {
+        id: '550e8400-e29b-41d4-a716-446655440002',
+        subscriptionCardNo: '6342030005628033',
+        first_name: 'Jane',
+        last_name: 'Doe',
+        father_name: 'William Smith',
+        mother_name: 'Elizabeth Smith',
+        gender: 'Female',
+        marital_status: 'Married',
+        date_of_birth: '1982-03-22',
+        date_of_baptism: '1982-04-15',
+        date_of_confirmation: '1997-04-15',
+        date_of_marriage: '2005-08-10',
+        blood_group: 'A+',
+        profession: 'Teacher',
+        mobile_no: '123-456-7891',
+        email: 'jane.doe@example.com',
+        relationship_type: 'Spouse',
+        is_head: false,
+        familyId: '550e8400-e29b-41d4-a716-446655440000'
+      },
+      {
+        id: '550e8400-e29b-41d4-a716-446655440003',
+        subscriptionCardNo: '7343130006628034',
+        first_name: 'Jimmy',
+        last_name: 'Doe',
+        father_name: 'John Doe',
+        mother_name: 'Jane Doe',
+        gender: 'Male',
+        marital_status: 'Single',
+        date_of_birth: '2010-11-08',
+        date_of_baptism: '2010-12-15',
+        date_of_confirmation: '2025-12-15',
+        blood_group: 'O-',
+        profession: 'Student',
+        mobile_no: '123-456-7892',
+        email: 'jimmy.doe@example.com',
+        relationship_type: 'Child',
+        is_head: false,
+        familyId: '550e8400-e29b-41d4-a716-446655440000'
+      }
+    ]
+  },
+  {
+    id: '550e8400-e29b-41d4-a716-446655440004',
+    family_code: 'FAM002',
+    family_name: 'McPhee Family',
+    residential_address: '789 Oak St, Springfield',
+    office_address: '321 Corporate Blvd, Springfield',
+    area: 'Suburb',
+    created_at: '2024-02-20T09:15:00Z',
+    updated_at: '2024-03-08T16:45:00Z',
+    members: [
+      {
+        id: '550e8400-e29b-41d4-a716-446655440005',
+        subscriptionCardNo: '5341930004628032',
+        first_name: 'Jennie',
+        last_name: 'McPhee',
+        father_name: 'David McPhee',
+        mother_name: 'Sarah McPhee',
+        gender: 'Female',
+        marital_status: 'Single',
+        date_of_birth: '1990-07-12',
+        date_of_baptism: '1990-08-20',
+        date_of_confirmation: '2005-08-20',
+        blood_group: 'B+',
+        profession: 'Doctor',
+        mobile_no: '123-456-7893',
+        email: 'jennie@example.com',
+        relationship_type: 'Head',
+        is_head: true,
+        familyId: '550e8400-e29b-41d4-a716-446655440004'
+      }
+    ]
+  },
+  {
+    id: '550e8400-e29b-41d4-a716-446655440006',
+    family_code: 'FAM003',
+    family_name: 'Ottomon Family',
+    residential_address: '456 Pine St, Springfield',
+    office_address: '654 Tech Park, Springfield',
+    area: 'Uptown',
+    created_at: '2024-01-30T11:30:00Z',
+    updated_at: '2024-03-07T13:20:00Z',
+    members: [
+      {
+        id: '550e8400-e29b-41d4-a716-446655440007',
+        subscriptionCardNo: '6343200059628036',
+        first_name: 'Jenny',
+        last_name: 'Ottomon',
+        father_name: 'Michael Ottomon',
+        mother_name: 'Lisa Ottomon',
+        gender: 'Female',
+        marital_status: 'Married',
+        date_of_birth: '1985-09-18',
+        date_of_baptism: '1985-10-25',
+        date_of_confirmation: '2000-10-25',
+        date_of_marriage: '2010-06-15',
+        blood_group: 'AB+',
+        profession: 'Lawyer',
+        mobile_no: '123-456-7894',
+        email: 'jenny.o@example.com',
+        relationship_type: 'Head',
+        is_head: true,
+        familyId: '550e8400-e29b-41d4-a716-446655440006'
+      }
+    ]
+  },
+  {
+    id: '550e8400-e29b-41d4-a716-446655440008',
+    family_code: 'FAM004',
+    family_name: 'Slater Family',
+    residential_address: '987 Elm St, Springfield',
+    office_address: '147 Finance St, Springfield',
+    area: 'Business District',
+    created_at: '2024-03-01T08:45:00Z',
+    updated_at: '2024-03-09T10:15:00Z',
+    members: [
+      {
+        id: '550e8400-e29b-41d4-a716-446655440009',
+        subscriptionCardNo: '6289160004624199',
+        first_name: 'Jenny',
+        last_name: 'Slater',
+        father_name: 'Thomas Slater',
+        mother_name: 'Anna Slater',
+        gender: 'Female',
+        marital_status: 'Divorced',
+        date_of_birth: '1978-12-03',
+        date_of_baptism: '1979-01-10',
+        date_of_confirmation: '1994-01-10',
+        date_of_marriage: '2000-04-20',
+        blood_group: 'A-',
+        profession: 'Accountant',
+        mobile_no: '123-456-7895',
+        email: 'jenny.s@example.com',
+        relationship_type: 'Head',
+        is_head: true,
+        familyId: '550e8400-e29b-41d4-a716-446655440008'
+      }
+    ]
+  }
+]
+
+// Functions for managing mock data
+export const getMockFamilies = () => globalFamilies
+
+export const addFamily = (family: Family) => {
+  globalFamilies = [...globalFamilies, family]
+}
+
+export const updateFamily = (familyId: string, updatedFamily: Family) => {
+  globalFamilies = globalFamilies.map(f =>
+    f.id === familyId ? updatedFamily : f
+  )
+}
+
+// Mock person data
+export const mockPersonData: Person = {
+  id: '550e8400-e29b-41d4-a716-446655440001',
+  subscriptionCardNo: '5341930004628032',
+  first_name: 'John',
+  last_name: 'Doe',
+  father_name: 'Robert Doe',
+  mother_name: 'Mary Doe',
+  gender: 'Male',
+  marital_status: 'Married',
+  date_of_birth: '1980-05-15',
+  date_of_baptism: '1980-06-20',
+  date_of_confirmation: '1995-06-20',
+  date_of_marriage: '2005-08-10',
+  blood_group: 'O+',
+  profession: 'Engineer',
+  mobile_no: '123-456-7890',
+  email: 'john.doe@example.com',
+  relationship_type: 'Head',
+  is_head: true,
+  familyId: '550e8400-e29b-41d4-a716-446655440000'
+}

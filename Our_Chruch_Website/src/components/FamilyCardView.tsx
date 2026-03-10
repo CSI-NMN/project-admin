@@ -1,4 +1,4 @@
-import { Family, Person } from '@/types/family'
+import { Family, Person } from '@/types/records'
 
 interface FamilyCardViewProps {
   family: Family
@@ -193,3 +193,4 @@ export default function FamilyCardView({ family, selectedPerson, onBack }: Famil
     </div>
   )
 }
+
