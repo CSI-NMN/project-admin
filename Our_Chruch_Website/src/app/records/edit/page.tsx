@@ -2,7 +2,7 @@
 
 import { Suspense, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import RecordsForm from '@/components/RecordsForm'
+import RecordsForm from '@/components/records/RecordsForm'
 import { Person } from '@/types/records'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { updatePerson } from '@/store/slices/recordsSlice'

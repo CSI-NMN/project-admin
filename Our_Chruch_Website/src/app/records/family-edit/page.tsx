@@ -2,7 +2,7 @@
 
 import { Suspense, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import FamilyForm from '@/components/FamilyForm'
+import FamilyForm from '@/components/records/FamilyForm'
 import { Family } from '@/types/records'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { updateFamily } from '@/store/slices/recordsSlice'

@@ -2,8 +2,8 @@
 
 import { Suspense, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import RecordsForm from '@/components/RecordsForm'
-import FamilyForm from '@/components/FamilyForm'
+import RecordsForm from '@/components/records/RecordsForm'
+import FamilyForm from '@/components/records/FamilyForm'
 import { Family, Person } from '@/types/records'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { addFamily, addPerson, updatePerson } from '@/store/slices/recordsSlice'
