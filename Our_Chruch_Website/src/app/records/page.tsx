@@ -1,23 +1,53 @@
 'use client'
 
+import './records.css'
 import { Suspense, useMemo, useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Family, Person } from '@/types/records'
-import { useAppSelector } from '@/store/hooks'
+import { useAppDispatch, useAppSelector } from '@/store/hooks'
+import { deletePerson, updatePerson } from '@/store/slices/recordsSlice'
 import { buildSearchIndex, matchesRecordSearch } from '@/utils/records'
 
 function AdminRecordsPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const dispatch = useAppDispatch()
   const families = useAppSelector(state => state.records.families)
 
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<Person[]>([])
   const [selectedFamily, setSelectedFamily] = useState<Family | null>(null)
   const [showTable, setShowTable] = useState(false)
-  const [showAddDialog, setShowAddDialog] = useState(false)
+  const [showHierarchyEditor, setShowHierarchyEditor] = useState(false)
+  const [selectedHierarchyPersonIds, setSelectedHierarchyPersonIds] = useState<string[]>([])
+  const [targetFamilyId, setTargetFamilyId] = useState('')
+  const [showSplitModal, setShowSplitModal] = useState(false)
+  const [splitModalMode, setSplitModalMode] = useState<'choose' | 'merge'>('choose')
+  const [familySearchQuery, setFamilySearchQuery] = useState('')
+  const [deleteCandidate, setDeleteCandidate] = useState<Person | null>(null)
 
   const searchIndex = useMemo(() => buildSearchIndex(families), [families])
+  const availableFamilies = useMemo(
+    () => families.filter(family => family.id !== selectedFamily?.id),
+    [families, selectedFamily?.id]
+  )
+
+  const selectedHierarchyPeople = useMemo(() => {
+    if (!selectedFamily || selectedHierarchyPersonIds.length === 0) return []
+    return selectedFamily.members.filter(person => selectedHierarchyPersonIds.includes(person.id))
+  }, [selectedFamily, selectedHierarchyPersonIds])
+  const filteredTargetFamilies = useMemo(() => {
+    const query = familySearchQuery.trim().toLowerCase()
+    if (!query) return availableFamilies
+
+    return availableFamilies.filter(
+      family =>
+        family.family_name.toLowerCase().includes(query) ||
+        family.family_code.toLowerCase().includes(query) ||
+        family.id.toLowerCase().includes(query)
+    )
+  }, [availableFamilies, familySearchQuery])
+  const selectedFamilyId = selectedFamily?.id || ''
 
   useEffect(() => {
     const familyId = searchParams.get('familyId')
@@ -29,6 +59,13 @@ function AdminRecordsPageContent() {
       setShowTable(true)
     }
   }, [families, searchParams])
+
+  useEffect(() => {
+    if (!selectedFamilyId) return
+
+    const refreshedFamily = families.find(f => f.id === selectedFamilyId) || null
+    setSelectedFamily(refreshedFamily)
+  }, [families, selectedFamilyId])
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value
@@ -67,21 +104,40 @@ function AdminRecordsPageContent() {
     router.push(`/records/edit?id=${personId}`)
   }
 
+  const handleEditFamily = () => {
+    if (!selectedFamily?.id) return
+    router.push(`/records/family-edit?familyId=${selectedFamily.id}`)
+  }
+
+  const closeSplitModal = () => {
+    setShowSplitModal(false)
+    setSplitModalMode('choose')
+    setFamilySearchQuery('')
+    setTargetFamilyId('')
+  }
+
+  const resetHierarchyState = () => {
+    setSelectedHierarchyPersonIds([])
+    closeSplitModal()
+  }
+
   const handleEditHierarchy = () => {
-    alert('Edit family hierarchy functionality to be implemented')
+    if (showHierarchyEditor) {
+      setShowHierarchyEditor(false)
+      resetHierarchyState()
+      return
+    }
+
+    setShowHierarchyEditor(true)
+    resetHierarchyState()
+  }
+
+  const handleDiscardHierarchy = () => {
+    setShowHierarchyEditor(false)
+    resetHierarchyState()
   }
 
   const handleAddNewUser = () => {
-    setShowAddDialog(true)
-  }
-
-  const handleCreateNewFamily = () => {
-    setShowAddDialog(false)
-    router.push('/records/create')
-  }
-
-  const handleCreateNewPerson = () => {
-    setShowAddDialog(false)
     if (selectedFamily?.id) {
       router.push(`/records/create?mode=person&familyId=${selectedFamily.id}`)
       return
@@ -89,10 +145,74 @@ function AdminRecordsPageContent() {
     router.push('/records/create?mode=person')
   }
 
+  const handleCreateNewFamilyFromHierarchy = () => {
+    if (selectedHierarchyPersonIds.length === 0) {
+      alert('Select at least one person first from the records table.')
+      return
+    }
+
+    closeSplitModal()
+    const movePersonIds = encodeURIComponent(selectedHierarchyPersonIds.join(','))
+    router.push(`/records/create?movePersonIds=${movePersonIds}`)
+  }
+
+  const handleMoveToDifferentFamily = () => {
+    if (selectedHierarchyPersonIds.length === 0 || !targetFamilyId) {
+      alert('Select one or more people and a target family.')
+      return
+    }
+
+    selectedHierarchyPersonIds.forEach(personId => {
+      dispatch(
+        updatePerson({
+          personId,
+          data: { familyId: targetFamilyId },
+        })
+      )
+    })
+
+    setShowHierarchyEditor(false)
+    resetHierarchyState()
+    router.push(`/records?familyId=${targetFamilyId}`)
+  }
+
+  const handleOpenSplitModal = () => {
+    if (selectedHierarchyPersonIds.length === 0) return
+    setShowSplitModal(true)
+    setSplitModalMode('choose')
+    setFamilySearchQuery('')
+    setTargetFamilyId('')
+  }
+
   const handleBackToResults = () => {
     setShowTable(false)
     setSelectedFamily(null)
+    setShowHierarchyEditor(false)
+    resetHierarchyState()
     router.push('/records')
+  }
+
+  const handleSelectHierarchyPerson = (personId: string) => {
+    setSelectedHierarchyPersonIds(prev =>
+      prev.includes(personId) ? prev.filter(id => id !== personId) : [...prev, personId]
+    )
+    setTargetFamilyId('')
+  }
+
+  const handleDeleteRequest = (person: Person) => {
+    setDeleteCandidate(person)
+  }
+
+  const handleConfirmDelete = () => {
+    if (!deleteCandidate) return
+
+    dispatch(
+      deletePerson({
+        personId: deleteCandidate.id,
+      })
+    )
+    setSelectedHierarchyPersonIds(prev => prev.filter(id => id !== deleteCandidate.id))
+    setDeleteCandidate(null)
   }
 
   return (
@@ -103,9 +223,7 @@ function AdminRecordsPageContent() {
             <div className="records-header">
               <div>
                 <h1 className="records-title">Records</h1>
-                <p className="records-subtitle">
-                  View and manage records of all church family members
-                </p>
+                <p className="records-subtitle">View and manage records of all church family members</p>
               </div>
               <button onClick={handleCreateNewRecord} className="app-btn-primary">
                 Create new Family
@@ -194,13 +312,29 @@ function AdminRecordsPageContent() {
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
-              Back to Results
+              Back to Records
             </button>
 
             {selectedFamily && (
               <div className="app-card records-family-shell">
                 <div className="records-family-header">
-                  <h3 className="records-section-title">Family Details</h3>
+                  <div className="records-family-title-row">
+                    <h3 className="records-section-title">Family Details</h3>
+                    <button
+                      onClick={handleEditFamily}
+                      className="records-family-edit-icon-btn"
+                      aria-label="Edit Family Details"
+                      title="Edit Family Details"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M16.862 4.487a2.125 2.125 0 013.005 3.004L8.25 19.11l-4.125.938.937-4.125L16.862 4.487z"
+                        />
+                      </svg>
+                    </button>
+                  </div>
                   <div className="records-family-grid">
                     <div>
                       <p className="records-field-label">Family Code (Unique)</p>
@@ -238,11 +372,44 @@ function AdminRecordsPageContent() {
                   </div>
                 </div>
 
-                <div className="records-family-actions">
-                  <button onClick={handleEditHierarchy} className="app-btn-primary">
-                    Edit Family Hierarchy
-                  </button>
-                </div>
+                {!showHierarchyEditor && (
+                  <div className="records-family-actions">
+                    <button onClick={handleEditHierarchy} className="app-btn-primary">
+                      Edit Family Hierarchy
+                    </button>
+                  </div>
+                )}
+
+                {showHierarchyEditor && (
+                  <div className="records-hierarchy-panel">
+                    <h4 className="records-hierarchy-title">Family Hierarchy Editor</h4>
+                    <p className="records-hierarchy-help">
+                      Select a person in the records table below, then move them to another family or create a new family.
+                    </p>
+
+                    <div className="records-hierarchy-selected">
+                      <p className="records-hierarchy-name">
+                        Selected records: {selectedHierarchyPeople.length}
+                      </p>
+                      {selectedHierarchyPeople.length > 0 && (
+                        <p className="records-hierarchy-sub">
+                          {selectedHierarchyPeople
+                            .map(person => `${person.first_name} ${person.last_name}`)
+                            .join(', ')}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="records-hierarchy-top-actions">
+                      <button onClick={handleDiscardHierarchy} className="app-back-link">
+                        Discard
+                      </button>
+                      <button onClick={handleOpenSplitModal} className="app-btn-primary" disabled={selectedHierarchyPersonIds.length === 0}>
+                        Split Family
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 <div className="records-table-scroll">
                   <table className="records-table">
@@ -270,9 +437,45 @@ function AdminRecordsPageContent() {
                           <td className="records-table-td">{person.mobile_no}</td>
                           <td className="records-table-td">{person.email}</td>
                           <td className="records-table-td">
-                            <button onClick={() => handleEditPerson(person.id)} className="records-action-link">
-                              Edit
-                            </button>
+                            {showHierarchyEditor ? (
+                              <button
+                                onClick={() => handleSelectHierarchyPerson(person.id)}
+                                className={`records-select-btn ${selectedHierarchyPersonIds.includes(person.id) ? 'records-select-btn-active' : ''}`}
+                              >
+                                {selectedHierarchyPersonIds.includes(person.id) ? 'Selected' : 'Select'}
+                              </button>
+                            ) : (
+                              <div className="records-action-group">
+                                <button
+                                  onClick={() => handleEditPerson(person.id)}
+                                  className="records-action-icon-btn"
+                                  aria-label={`Edit ${person.first_name} ${person.last_name}`}
+                                  title="Edit"
+                                >
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="M16.862 4.487a2.125 2.125 0 013.005 3.004L8.25 19.11l-4.125.938.937-4.125L16.862 4.487z"
+                                    />
+                                  </svg>
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteRequest(person)}
+                                  className="records-action-icon-btn records-action-icon-btn-delete"
+                                  aria-label={`Delete ${person.first_name} ${person.last_name}`}
+                                  title="Delete"
+                                >
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="M3 6h18M9 6V4h6v2m-8 0l1 14h8l1-14"
+                                    />
+                                  </svg>
+                                </button>
+                              </div>
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -281,9 +484,11 @@ function AdminRecordsPageContent() {
                 </div>
 
                 <div className="records-family-footer">
-                  <button onClick={handleAddNewUser} className="records-footer-action">
-                    Add new record
-                  </button>
+                  {!showHierarchyEditor && (
+                    <button onClick={handleAddNewUser} className="records-footer-action">
+                      Add new record
+                    </button>
+                  )}
                 </div>
               </div>
             )}
@@ -291,25 +496,100 @@ function AdminRecordsPageContent() {
         )}
       </div>
 
-      {showAddDialog && (
+      {deleteCandidate && (
         <div className="records-modal-overlay">
           <div className="records-modal">
             <div className="records-modal-header">
-              <h3 className="records-modal-title">Add New Record</h3>
-              <p className="records-modal-subtitle">Choose what you want to create.</p>
-            </div>
-            <div className="records-modal-body">
-              <button onClick={handleCreateNewFamily} className="records-modal-option">
-                New Family
-              </button>
-              <button onClick={handleCreateNewPerson} className="records-modal-option records-modal-option-active">
-                New Person
-              </button>
+              <h3 className="records-modal-title">Delete Record</h3>
+              <p className="records-modal-subtitle">
+                Are you sure you want to delete {deleteCandidate.first_name} {deleteCandidate.last_name}?
+              </p>
             </div>
             <div className="records-modal-footer">
-              <button onClick={() => setShowAddDialog(false)} className="records-modal-cancel">
+              <button onClick={() => setDeleteCandidate(null)} className="app-btn-secondary">
                 Cancel
               </button>
+              <button onClick={handleConfirmDelete} className="app-btn-primary">
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showSplitModal && (
+        <div className="records-modal-overlay">
+          <div className="records-modal records-split-modal">
+            <div className="records-modal-header">
+              <h3 className="records-modal-title">Split Family</h3>
+              <p className="records-modal-subtitle">
+                {splitModalMode === 'choose'
+                  ? 'Choose how to move the selected records.'
+                  : 'Search a family record and merge selected members into it.'}
+              </p>
+            </div>
+
+            <div className="records-modal-body">
+              {splitModalMode === 'choose' ? (
+                <>
+                  <button onClick={handleCreateNewFamilyFromHierarchy} className="records-modal-option">
+                    Create New Family
+                  </button>
+                  <button
+                    onClick={() => setSplitModalMode('merge')}
+                    className="records-modal-option records-modal-option-active"
+                  >
+                    Merge to Different Family
+                  </button>
+                </>
+              ) : (
+                <>
+                  <input
+                    type="text"
+                    placeholder="Search family by name, code, or id"
+                    value={familySearchQuery}
+                    onChange={e => setFamilySearchQuery(e.target.value)}
+                    className="app-input records-split-family-search"
+                  />
+
+                  <div className="records-split-family-list">
+                    {filteredTargetFamilies.length > 0 ? (
+                      filteredTargetFamilies.map(family => (
+                        <button
+                          key={family.id}
+                          onClick={() => setTargetFamilyId(family.id)}
+                          className={`records-split-family-item ${targetFamilyId === family.id ? 'records-split-family-item-active' : ''}`}
+                        >
+                          <span>{family.family_name}</span>
+                          <span className="records-split-family-code">{family.family_code}</span>
+                        </button>
+                      ))
+                    ) : (
+                      <p className="records-split-family-empty">No family found for this search.</p>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="records-modal-footer">
+              {splitModalMode === 'merge' && (
+                <button onClick={() => setSplitModalMode('choose')} className="app-btn-secondary">
+                  Back
+                </button>
+              )}
+              <button onClick={closeSplitModal} className="app-btn-secondary">
+                Cancel
+              </button>
+              {splitModalMode === 'merge' && (
+                <button
+                  onClick={handleMoveToDifferentFamily}
+                  className="app-btn-primary"
+                  disabled={selectedHierarchyPersonIds.length === 0 || !targetFamilyId}
+                >
+                  Merge Family
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -317,8 +597,6 @@ function AdminRecordsPageContent() {
     </div>
   )
 }
-
-
 
 export default function AdminRecordsPage() {
   return (

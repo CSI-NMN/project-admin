@@ -2,55 +2,50 @@
 
 import { Suspense, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import RecordsForm from '@/components/RecordsForm'
-import { Person } from '@/types/records'
+import FamilyForm from '@/components/FamilyForm'
+import { Family } from '@/types/records'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
-import { updatePerson } from '@/store/slices/recordsSlice'
-import { findPersonWithFamily } from '@/utils/records'
+import { updateFamily } from '@/store/slices/recordsSlice'
 
-function EditRecordPageContent() {
+function EditFamilyPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const dispatch = useAppDispatch()
 
-  const personId = searchParams.get('id')
+  const familyId = searchParams.get('familyId')
   const families = useAppSelector(state => state.records.families)
 
-  const record = useMemo(() => findPersonWithFamily(families, personId), [families, personId])
+  const family = useMemo(
+    () => families.find(item => item.id === familyId) || null,
+    [families, familyId]
+  )
 
-  const handleSubmit = (data: Partial<Person>) => {
-    if (!personId) return
+  const handleSubmit = (data: Partial<Family>) => {
+    if (!family?.id) return
 
     dispatch(
-      updatePerson({
-        personId,
+      updateFamily({
+        familyId: family.id,
         data,
       })
     )
 
-    const targetFamilyId = data.familyId || record?.person.familyId
-
-    if (targetFamilyId) {
-      router.push(`/records?familyId=${targetFamilyId}`)
-      return
-    }
-
-    router.push('/records')
+    router.push(`/records?familyId=${family.id}`)
   }
 
   const handleCancel = () => {
-    if (record?.person.familyId) {
-      router.push(`/records?familyId=${record.person.familyId}`)
+    if (family?.id) {
+      router.push(`/records?familyId=${family.id}`)
       return
     }
     router.push('/records')
   }
 
-  if (!record) {
+  if (!family) {
     return (
       <div className="app-page">
         <div className="app-shell">
-          <p className="app-empty-text">Person record not found.</p>
+          <p className="app-empty-text">Family record not found.</p>
         </div>
       </div>
     )
@@ -66,10 +61,9 @@ function EditRecordPageContent() {
           Back to Records
         </button>
 
-        <RecordsForm
-          initialData={record.person}
-          isNew={false}
-          families={families}
+        <FamilyForm
+          initialData={family}
+          isEdit={true}
           onSubmit={handleSubmit}
           onCancel={handleCancel}
         />
@@ -78,8 +72,7 @@ function EditRecordPageContent() {
   )
 }
 
-
-export default function EditRecordPage() {
+export default function EditFamilyPage() {
   return (
     <Suspense
       fallback={
@@ -90,7 +83,7 @@ export default function EditRecordPage() {
         </div>
       }
     >
-      <EditRecordPageContent />
+      <EditFamilyPageContent />
     </Suspense>
   )
 }

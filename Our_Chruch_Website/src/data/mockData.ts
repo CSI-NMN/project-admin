@@ -31,7 +31,7 @@ let globalFamilies: Family[] = [
         email: 'john.doe@example.com',
         relationship_type: 'Head',
         is_head: true,
-        familyId: '550e8400-e29b-41d4-a716-446655440000'
+        familyId: '550e8400-e29b-41d4-a716-446655440000',
       },
       {
         id: '550e8400-e29b-41d4-a716-446655440002',
@@ -52,7 +52,7 @@ let globalFamilies: Family[] = [
         email: 'jane.doe@example.com',
         relationship_type: 'Spouse',
         is_head: false,
-        familyId: '550e8400-e29b-41d4-a716-446655440000'
+        familyId: '550e8400-e29b-41d4-a716-446655440000',
       },
       {
         id: '550e8400-e29b-41d4-a716-446655440003',
@@ -72,9 +72,9 @@ let globalFamilies: Family[] = [
         email: 'jimmy.doe@example.com',
         relationship_type: 'Child',
         is_head: false,
-        familyId: '550e8400-e29b-41d4-a716-446655440000'
-      }
-    ]
+        familyId: '550e8400-e29b-41d4-a716-446655440000',
+      },
+    ],
   },
   {
     id: '550e8400-e29b-41d4-a716-446655440004',
@@ -104,9 +104,9 @@ let globalFamilies: Family[] = [
         email: 'jennie@example.com',
         relationship_type: 'Head',
         is_head: true,
-        familyId: '550e8400-e29b-41d4-a716-446655440004'
-      }
-    ]
+        familyId: '550e8400-e29b-41d4-a716-446655440004',
+      },
+    ],
   },
   {
     id: '550e8400-e29b-41d4-a716-446655440006',
@@ -137,9 +137,9 @@ let globalFamilies: Family[] = [
         email: 'jenny.o@example.com',
         relationship_type: 'Head',
         is_head: true,
-        familyId: '550e8400-e29b-41d4-a716-446655440006'
-      }
-    ]
+        familyId: '550e8400-e29b-41d4-a716-446655440006',
+      },
+    ],
   },
   {
     id: '550e8400-e29b-41d4-a716-446655440008',
@@ -170,10 +170,10 @@ let globalFamilies: Family[] = [
         email: 'jenny.s@example.com',
         relationship_type: 'Head',
         is_head: true,
-        familyId: '550e8400-e29b-41d4-a716-446655440008'
-      }
-    ]
-  }
+        familyId: '550e8400-e29b-41d4-a716-446655440008',
+      },
+    ],
+  },
 ]
 
 // Functions for managing mock data
@@ -184,9 +184,7 @@ export const addFamily = (family: Family) => {
 }
 
 export const updateFamily = (familyId: string, updatedFamily: Family) => {
-  globalFamilies = globalFamilies.map(f =>
-    f.id === familyId ? updatedFamily : f
-  )
+  globalFamilies = globalFamilies.map(f => (f.id === familyId ? updatedFamily : f))
 }
 
 // Mock person data
@@ -209,5 +207,5 @@ export const mockPersonData: Person = {
   email: 'john.doe@example.com',
   relationship_type: 'Head',
   is_head: true,
-  familyId: '550e8400-e29b-41d4-a716-446655440000'
+  familyId: '550e8400-e29b-41d4-a716-446655440000',
 }
