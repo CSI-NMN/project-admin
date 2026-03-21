@@ -1,0 +1,126 @@
+.celebrations-title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  line-height: 2.25rem;
+  color: #111827;
+  margin-bottom: 1.5rem;
+}
+
+.celebrations-card {
+  padding: 1.5rem;
+}
+
+.celebrations-filter {
+  max-width: 20rem;
+  margin-bottom: 1.25rem;
+}
+
+.celebrations-month-select {
+  min-height: 2.75rem;
+}
+
+.celebrations-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 1rem;
+  color: #374151;
+  margin-bottom: 1.25rem;
+}
+
+.celebrations-summary-value {
+  font-weight: 700;
+  color: #111827;
+}
+
+.celebrations-tabs {
+  display: flex;
+  gap: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 1rem;
+}
+
+.celebrations-tab {
+  padding: 0.65rem 0.1rem;
+  font-weight: 700;
+  color: #4b5563;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s ease;
+}
+
+.celebrations-tab:hover {
+  color: #111827;
+}
+
+.celebrations-tab-active {
+  color: #f06c00;
+  border-bottom-color: #f06c00;
+}
+
+.celebrations-table-scroll {
+  overflow-x: auto;
+}
+
+.celebrations-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.celebrations-table-head-row {
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.celebrations-table-th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.celebrations-table-row {
+  border-bottom: 1px solid #e5e7eb;
+  transition: background-color 0.2s ease;
+}
+
+.celebrations-table-row:hover {
+  background: #fffbeb;
+}
+
+.celebrations-table-row-even {
+  background: #ffffff;
+}
+
+.celebrations-table-row-odd {
+  background: #f9fafb;
+}
+
+.celebrations-table-td {
+  padding: 0.85rem 1rem;
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.celebrations-table-td-strong {
+  color: #111827;
+  font-weight: 600;
+}
+
+.celebrations-empty {
+  text-align: center;
+  color: #4b5563;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 2rem 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .celebrations-tabs {
+    gap: 0.85rem;
+  }
+
+  .celebrations-summary {
+    font-size: 0.92rem;
+  }
+}

@@ -11,6 +11,7 @@ type Tab = {
 const tabs: Tab[] = [
   { key: 'home', label: 'Home', href: '/' },
   { key: 'records', label: 'Records', href: '/records' },
+  { key: 'celebrations', label: 'Celebrations', href: '/celebrations' },
   { key: 'filter', label: 'Filter', href: '/filter' },
   { key: 'admin', label: 'Admin', href: '/admin' },
   { key: 'accounts', label: 'Accounts', href: '/accounts' },
