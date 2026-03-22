@@ -54,7 +54,7 @@ export default function RecordsSearchSection({
             placeholder="Search..."
             value={searchQuery}
             onChange={onSearchChange}
-            className="records-search-input"
+            className={`records-search-input ${searchQuery.trim() ? 'records-search-input-active' : ''}`}
           />
           {searchQuery && (
             <button onClick={onClearSearch} className="records-search-clear">

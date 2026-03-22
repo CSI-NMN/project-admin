@@ -3,6 +3,12 @@
   font-weight: 700;
   line-height: 2.25rem;
   color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.celebrations-subtitle {
+  font-size: 1rem;
+  color: #4b5563;
   margin-bottom: 1.5rem;
 }
 
@@ -61,54 +67,12 @@
   border-bottom-color: #f06c00;
 }
 
-.celebrations-table-scroll {
-  overflow-x: auto;
-}
-
-.celebrations-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.celebrations-table-head-row {
-  background: #f9fafb;
-  border-bottom: 1px solid #e5e7eb;
-}
-
 .celebrations-table-th {
   padding: 0.75rem 1rem;
-  text-align: left;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #111827;
-}
-
-.celebrations-table-row {
-  border-bottom: 1px solid #e5e7eb;
-  transition: background-color 0.2s ease;
-}
-
-.celebrations-table-row:hover {
-  background: #fffbeb;
-}
-
-.celebrations-table-row-even {
-  background: #ffffff;
-}
-
-.celebrations-table-row-odd {
-  background: #f9fafb;
 }
 
 .celebrations-table-td {
   padding: 0.85rem 1rem;
-  font-size: 0.875rem;
-  color: #374151;
-}
-
-.celebrations-table-td-strong {
-  color: #111827;
-  font-weight: 600;
 }
 
 .celebrations-action-group {
@@ -121,35 +85,45 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 9999px;
-  border: 1px solid #fdba74;
+  width: 2.1rem;
+  height: 2.1rem;
+  border: none;
   color: #d97706;
-  background: #ffffff;
+  background: transparent;
   transition: all 0.2s ease;
 }
 
 .celebrations-action-icon-btn svg {
-  width: 1rem;
-  height: 1rem;
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.celebrations-action-icon-btn .app-delete-icon-image {
+  width: 1.2rem;
+  height: 1.2rem;
 }
 
 .celebrations-action-icon-btn:hover {
   color: #b45309;
-  border-color: #f59e0b;
-  background: #fffbeb;
+  background: transparent;
 }
 
 .celebrations-action-icon-btn-delete {
-  color: #dc2626;
-  border-color: #fca5a5;
+  color: #6b7280;
+}
+
+.celebrations-action-icon-btn-delete .app-delete-icon-image {
+  width: 1.35rem;
+  height: 1.35rem;
 }
 
 .celebrations-action-icon-btn-delete:hover {
-  color: #b91c1c;
-  border-color: #f87171;
-  background: #fef2f2;
+  color: #111827;
+  background: transparent;
+}
+
+.celebrations-action-icon-btn-delete:hover .app-delete-icon-image {
+  opacity: 1;
 }
 
 .celebrations-empty {

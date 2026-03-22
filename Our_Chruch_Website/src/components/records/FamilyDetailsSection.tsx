@@ -1,4 +1,6 @@
 import { Family, Person } from '@/types/records'
+import DeleteIcon from '@/components/common/DeleteIcon'
+import EditIcon from '@/components/common/EditIcon'
 
 interface FamilyDetailsSectionProps {
   selectedFamily: Family
@@ -50,13 +52,7 @@ export default function FamilyDetailsSection({
               aria-label="Edit Family Details"
               title="Edit Family Details"
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M16.862 4.487a2.125 2.125 0 013.005 3.004L8.25 19.11l-4.125.938.937-4.125L16.862 4.487z"
-                />
-              </svg>
+              <EditIcon />
             </button>
           </div>
           <div className="records-family-grid">
@@ -185,13 +181,7 @@ export default function FamilyDetailsSection({
                           aria-label={`Edit ${person.first_name} ${person.last_name}`}
                           title="Edit"
                         >
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M16.862 4.487a2.125 2.125 0 013.005 3.004L8.25 19.11l-4.125.938.937-4.125L16.862 4.487z"
-                            />
-                          </svg>
+                          <EditIcon />
                         </button>
                         <button
                           onClick={() => onDeleteRequest(person)}
@@ -199,13 +189,7 @@ export default function FamilyDetailsSection({
                           aria-label={`Delete ${person.first_name} ${person.last_name}`}
                           title="Delete"
                         >
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M3 6h18M9 6V4h6v2m-8 0l1 14h8l1-14"
-                            />
-                          </svg>
+                          <DeleteIcon />
                         </button>
                       </div>
                     )}

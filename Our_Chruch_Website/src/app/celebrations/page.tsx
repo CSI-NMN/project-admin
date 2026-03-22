@@ -284,6 +284,9 @@ export default function CelebrationsPage() {
     <div className="app-page">
       <div className="app-shell">
         <h1 className="celebrations-title">Celebrations</h1>
+        <p className="celebrations-subtitle">
+          View and manage monthly birthdays and anniversaries for church family members.
+        </p>
 
         <div className="app-card celebrations-card">
           <div className="celebrations-filter">

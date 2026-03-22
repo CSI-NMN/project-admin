@@ -1,6 +1,6 @@
 .app-page {
   min-height: 100vh;
-  background: #f2f2f2;
+  background: #fbfaf7;
 }
 
 .app-shell {
@@ -153,6 +153,90 @@
   line-height: 2.25rem;
   color: #111827;
   margin-bottom: 0.5rem;
+}
+
+.app-delete-icon-image {
+  width: 1.2rem;
+  height: 1.2rem;
+  opacity: 0.72;
+}
+
+.app-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-shrink: 0;
+  background: #fbfaf7;
+  border: 2px solid #3f3f46;
+  color: #111827;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.125rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.app-btn-outline:hover {
+  background: #ffffff;
+  border-color: #f06c00;
+  color: #f06c00;
+}
+
+.records-table-scroll,
+.celebrations-table-scroll,
+.admin-table-scroll {
+  overflow-x: auto;
+}
+
+.records-table,
+.celebrations-table,
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.records-table-head-row,
+.celebrations-table-head-row,
+.admin-table-head-row {
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.records-table-th,
+.celebrations-table-th,
+.admin-table-th {
+  text-align: left;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.records-table-row,
+.celebrations-table-row,
+.admin-table-row {
+  border-bottom: 1px solid #e5e7eb;
+  transition: background-color 0.2s ease;
+  background: #ffffff;
+}
+
+.records-table-row:hover,
+.celebrations-table-row:hover,
+.admin-table-row:hover {
+  background: #fafafa;
+}
+
+.records-table-td,
+.celebrations-table-td,
+.admin-table-td {
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.records-table-td-strong,
+.celebrations-table-td-strong,
+.admin-table-td-strong {
+  color: #111827;
+  font-weight: 600;
 }
 
 /* Navbar V2 */

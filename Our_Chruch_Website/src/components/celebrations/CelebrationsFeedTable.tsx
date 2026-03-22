@@ -1,3 +1,6 @@
+import DeleteIcon from '@/components/common/DeleteIcon'
+import EditIcon from '@/components/common/EditIcon'
+
 export type CelebrationFeedType = 'birthdays' | 'anniversaries'
 
 export interface CelebrationFeedItem {
@@ -72,13 +75,7 @@ export default function CelebrationsFeedTable({
                     title="Edit"
                     type="button"
                   >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M16.862 4.487a2.125 2.125 0 013.005 3.004L8.25 19.11l-4.125.938.937-4.125L16.862 4.487z"
-                      />
-                    </svg>
+                    <EditIcon />
                   </button>
                   <button
                     onClick={() => onDeleteRecord(item.actionPersonId)}
@@ -87,13 +84,7 @@ export default function CelebrationsFeedTable({
                     title="Delete"
                     type="button"
                   >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M3 6h18M9 6V4h6v2m-8 0l1 14h8l1-14"
-                      />
-                    </svg>
+                    <DeleteIcon />
                   </button>
                 </div>
               </td>
