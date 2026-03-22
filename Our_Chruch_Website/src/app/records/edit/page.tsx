@@ -14,9 +14,22 @@ function EditRecordPageContent() {
   const dispatch = useAppDispatch()
 
   const personId = searchParams.get('id')
+  const source = searchParams.get('source')
   const families = useAppSelector(state => state.records.families)
 
   const record = useMemo(() => findPersonWithFamily(families, personId), [families, personId])
+
+  const buildReturnUrl = (familyId?: string) => {
+    if (source === 'celebrations') {
+      return '/celebrations'
+    }
+
+    if (familyId) {
+      return `/records?familyId=${familyId}`
+    }
+
+    return '/records'
+  }
 
   const handleSubmit = (data: Partial<Person>) => {
     if (!personId) return
@@ -29,21 +42,11 @@ function EditRecordPageContent() {
     )
 
     const targetFamilyId = data.familyId || record?.person.familyId
-
-    if (targetFamilyId) {
-      router.push(`/records?familyId=${targetFamilyId}`)
-      return
-    }
-
-    router.push('/records')
+    router.push(buildReturnUrl(targetFamilyId))
   }
 
   const handleCancel = () => {
-    if (record?.person.familyId) {
-      router.push(`/records?familyId=${record.person.familyId}`)
-      return
-    }
-    router.push('/records')
+    router.push(buildReturnUrl(record?.person.familyId))
   }
 
   if (!record) {
@@ -63,7 +66,7 @@ function EditRecordPageContent() {
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-          Back to Records
+          {source === 'celebrations' ? 'Back to Celebrations' : 'Back to Records'}
         </button>
 
         <RecordsForm

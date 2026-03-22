@@ -19,6 +19,10 @@
   min-height: 2.75rem;
 }
 
+.celebrations-download-row {
+  margin-bottom: 1.5rem;
+}
+
 .celebrations-summary {
   display: flex;
   flex-direction: column;
@@ -107,12 +111,98 @@
   font-weight: 600;
 }
 
+.celebrations-action-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.celebrations-action-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  border: 1px solid #fdba74;
+  color: #d97706;
+  background: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.celebrations-action-icon-btn svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.celebrations-action-icon-btn:hover {
+  color: #b45309;
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.celebrations-action-icon-btn-delete {
+  color: #dc2626;
+  border-color: #fca5a5;
+}
+
+.celebrations-action-icon-btn-delete:hover {
+  color: #b91c1c;
+  border-color: #f87171;
+  background: #fef2f2;
+}
+
 .celebrations-empty {
   text-align: center;
   color: #4b5563;
   font-size: 1rem;
   font-weight: 600;
   padding: 2rem 0.5rem;
+}
+
+.records-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(17, 24, 39, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1rem;
+}
+
+.records-modal {
+  width: 100%;
+  max-width: 28rem;
+  border-radius: 0.5rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+}
+
+.records-modal-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.records-modal-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.records-modal-subtitle {
+  font-size: 0.875rem;
+  color: #4b5563;
+  margin-top: 0.25rem;
+}
+
+.records-modal-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
 }
 
 @media (max-width: 768px) {
@@ -122,5 +212,9 @@
 
   .celebrations-summary {
     font-size: 0.92rem;
+  }
+
+  .celebrations-download-row .app-btn-primary {
+    width: 100%;
   }
 }

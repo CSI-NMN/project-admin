@@ -2,11 +2,17 @@
 
 import './celebrations.css'
 import { useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import * as XLSX from 'xlsx'
 import { useAppSelector } from '@/store/hooks'
+import { useAppDispatch } from '@/store/hooks'
+import { deletePerson } from '@/store/slices/recordsSlice'
+import { Person } from '@/types/records'
 import CelebrationsFeedTable, {
   CelebrationFeedItem,
   CelebrationFeedType,
 } from '@/components/celebrations/CelebrationsFeedTable'
+import DeleteRecordModal from '@/components/records/DeleteRecordModal'
 
 const MONTHS = [
   'January',
@@ -62,12 +68,107 @@ const buildCelebrationItem = (
   eventDay: day,
   mobile: mobile || '',
   email: email || '',
+  actionPersonId: personId,
 })
 
+const downloadCelebrationsWorkbook = (
+  monthLabel: string,
+  birthdayItems: CelebrationFeedItem[],
+  anniversaryItems: CelebrationFeedItem[]
+) => {
+  const workbook = XLSX.utils.book_new()
+
+  const birthdaysSheet = XLSX.utils.json_to_sheet(
+    birthdayItems.map(item => ({
+      Name: item.name,
+      Family: `${item.familyName} (${item.familyCode})`,
+      Date: item.eventDateLabel,
+      Mobile: item.mobile || 'N/A',
+      Email: item.email || 'N/A',
+    }))
+  )
+
+  const anniversariesSheet = XLSX.utils.json_to_sheet(
+    anniversaryItems.map(item => ({
+      Name: item.name,
+      Family: `${item.familyName} (${item.familyCode})`,
+      Date: item.eventDateLabel,
+      Mobile: item.mobile || 'N/A',
+      Email: item.email || 'N/A',
+    }))
+  )
+
+  XLSX.utils.book_append_sheet(workbook, birthdaysSheet, 'Birthdays')
+  XLSX.utils.book_append_sheet(workbook, anniversariesSheet, 'Anniversaries')
+  XLSX.writeFile(workbook, `celebrations-${monthLabel.toLowerCase()}.xlsx`)
+}
+
+const buildHonorificName = (person: Person) => {
+  const displayName = person.first_name.trim() || `${person.first_name} ${person.last_name}`.trim()
+  if (person.gender?.toLowerCase() === 'male') return `Mr ${displayName}`
+  if (person.gender?.toLowerCase() === 'female') return `Mrs ${displayName}`
+  return displayName
+}
+
+const CELEBRATIONS_VIEW_STATE_KEY = 'celebrations-view-state'
+
+const getInitialCelebrationsState = () => {
+  if (typeof window === 'undefined') {
+    return {
+      month: new Date().getMonth() + 1,
+      feed: 'birthdays' as CelebrationFeedType,
+    }
+  }
+
+  const savedState = window.sessionStorage.getItem(CELEBRATIONS_VIEW_STATE_KEY)
+  if (!savedState) {
+    return {
+      month: new Date().getMonth() + 1,
+      feed: 'birthdays' as CelebrationFeedType,
+    }
+  }
+
+  try {
+    const parsed = JSON.parse(savedState) as {
+      month?: number
+      feed?: CelebrationFeedType
+    }
+
+    return {
+      month:
+        parsed.month && parsed.month >= 1 && parsed.month <= 12
+          ? parsed.month
+          : new Date().getMonth() + 1,
+      feed: parsed.feed === 'anniversaries' ? 'anniversaries' : ('birthdays' as CelebrationFeedType),
+    }
+  } catch {
+    return {
+      month: new Date().getMonth() + 1,
+      feed: 'birthdays' as CelebrationFeedType,
+    }
+  }
+}
+
+const persistCelebrationsState = (month: number, feed: CelebrationFeedType) => {
+  if (typeof window === 'undefined') return
+
+  window.sessionStorage.setItem(
+    CELEBRATIONS_VIEW_STATE_KEY,
+    JSON.stringify({
+      month,
+      feed,
+    })
+  )
+}
+
 export default function CelebrationsPage() {
+  const router = useRouter()
+  const dispatch = useAppDispatch()
   const families = useAppSelector(state => state.records.families)
-  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1)
-  const [activeFeed, setActiveFeed] = useState<CelebrationFeedType>('birthdays')
+  const [initialState] = useState(getInitialCelebrationsState)
+  const [selectedMonth, setSelectedMonth] = useState<number>(initialState.month)
+  const [activeFeed, setActiveFeed] = useState<CelebrationFeedType>(initialState.feed)
+  const [deleteCandidate, setDeleteCandidate] = useState<Person | null>(null)
 
   const birthdayItems = useMemo(() => {
     const items: CelebrationFeedItem[] = []
@@ -100,20 +201,43 @@ export default function CelebrationsPage() {
     const items: CelebrationFeedItem[] = []
 
     families.forEach(family => {
-      family.members.forEach(person => {
+      const groupedByMarriageDate = family.members.reduce<Record<string, Person[]>>((acc, person) => {
+        if (!person.date_of_marriage) return acc
         const parts = getMonthAndDay(person.date_of_marriage)
-        if (!parts || parts.month !== selectedMonth) return
+        if (!parts || parts.month !== selectedMonth) return acc
+
+        const key = `${parts.month}-${parts.day}-${person.date_of_marriage}`
+        acc[key] = [...(acc[key] || []), person]
+        return acc
+      }, {})
+
+      Object.values(groupedByMarriageDate).forEach(group => {
+        const sortedGroup = [...group].sort((a, b) => {
+          if (a.is_head !== b.is_head) return a.is_head ? -1 : 1
+          if (a.relationship_type === 'Spouse' && b.relationship_type !== 'Spouse') return 1
+          if (b.relationship_type === 'Spouse' && a.relationship_type !== 'Spouse') return -1
+          return `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`)
+        })
+
+        const primaryPerson = sortedGroup[0]
+        const parts = getMonthAndDay(primaryPerson.date_of_marriage)
+        if (!parts) return
+
+        const displayName =
+          sortedGroup.length > 1
+            ? sortedGroup.slice(0, 2).map(buildHonorificName).join(' & ')
+            : buildHonorificName(primaryPerson)
 
         items.push(
           buildCelebrationItem(
-            person.id,
-            `${person.first_name} ${person.last_name}`,
+            primaryPerson.id,
+            displayName,
             family.family_name,
             family.family_code,
             parts.day,
             parts.month,
-            person.mobile_no,
-            person.email,
+            primaryPerson.mobile_no,
+            primaryPerson.email,
             'anniversary'
           )
         )
@@ -125,6 +249,36 @@ export default function CelebrationsPage() {
 
   const selectedMonthLabel = MONTHS[selectedMonth - 1]
   const activeItems = activeFeed === 'birthdays' ? birthdayItems : anniversaryItems
+  const peopleById = useMemo(() => {
+    const personMap = new Map<string, Person>()
+    families.forEach(family => {
+      family.members.forEach(person => {
+        personMap.set(person.id, person)
+      })
+    })
+    return personMap
+  }, [families])
+
+  const handleDownload = () => {
+    downloadCelebrationsWorkbook(selectedMonthLabel, birthdayItems, anniversaryItems)
+  }
+
+  const handleEditRecord = (personId: string) => {
+    persistCelebrationsState(selectedMonth, activeFeed)
+    router.push(`/records/edit?id=${personId}&source=celebrations`)
+  }
+
+  const handleDeleteRequest = (personId: string) => {
+    const person = peopleById.get(personId)
+    if (!person) return
+    setDeleteCandidate(person)
+  }
+
+  const handleConfirmDelete = () => {
+    if (!deleteCandidate) return
+    dispatch(deletePerson({ personId: deleteCandidate.id }))
+    setDeleteCandidate(null)
+  }
 
   return (
     <div className="app-page">
@@ -136,7 +290,11 @@ export default function CelebrationsPage() {
             <label className="app-label">Select month</label>
             <select
               value={selectedMonth}
-              onChange={event => setSelectedMonth(Number(event.target.value))}
+              onChange={event => {
+                const nextMonth = Number(event.target.value)
+                setSelectedMonth(nextMonth)
+                persistCelebrationsState(nextMonth, activeFeed)
+              }}
               className="app-input celebrations-month-select"
             >
               {MONTHS.map((monthName, index) => (
@@ -145,6 +303,12 @@ export default function CelebrationsPage() {
                 </option>
               ))}
             </select>
+          </div>
+
+          <div className="celebrations-download-row">
+            <button onClick={handleDownload} className="app-btn-primary" type="button">
+              Download
+            </button>
           </div>
 
           <div className="celebrations-summary">
@@ -161,14 +325,20 @@ export default function CelebrationsPage() {
           <div className="celebrations-tabs" role="tablist" aria-label="Celebrations feed tabs">
             <button
               className={`celebrations-tab ${activeFeed === 'birthdays' ? 'celebrations-tab-active' : ''}`}
-              onClick={() => setActiveFeed('birthdays')}
+              onClick={() => {
+                setActiveFeed('birthdays')
+                persistCelebrationsState(selectedMonth, 'birthdays')
+              }}
               type="button"
             >
               Birthdays
             </button>
             <button
               className={`celebrations-tab ${activeFeed === 'anniversaries' ? 'celebrations-tab-active' : ''}`}
-              onClick={() => setActiveFeed('anniversaries')}
+              onClick={() => {
+                setActiveFeed('anniversaries')
+                persistCelebrationsState(selectedMonth, 'anniversaries')
+              }}
               type="button"
             >
               Anniversaries
@@ -179,9 +349,17 @@ export default function CelebrationsPage() {
             feedType={activeFeed}
             monthLabel={selectedMonthLabel}
             items={activeItems}
+            onEditRecord={handleEditRecord}
+            onDeleteRecord={handleDeleteRequest}
           />
         </div>
       </div>
+
+      <DeleteRecordModal
+        deleteCandidate={deleteCandidate}
+        onCancel={() => setDeleteCandidate(null)}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   )
 }
