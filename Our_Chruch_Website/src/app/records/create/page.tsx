@@ -2,11 +2,11 @@
 
 import { Suspense, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import RecordsForm from '@/components/RecordsForm'
-import FamilyForm from '@/components/FamilyForm'
+import RecordsForm from '@/components/records/RecordsForm'
+import FamilyForm from '@/components/records/FamilyForm'
 import { Family, Person } from '@/types/records'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
-import { addFamily, addPerson } from '@/store/slices/recordsSlice'
+import { addFamily, addPerson, updatePerson } from '@/store/slices/recordsSlice'
 import { buildFamily, buildPerson } from '@/utils/records'
 
 type Step = 'family' | 'person'
@@ -19,8 +19,16 @@ function CreateRecordPageContent() {
 
   const mode = searchParams.get('mode')
   const familyIdFromQuery = searchParams.get('familyId') || ''
+  const movePersonIdsParam =
+    searchParams.get('movePersonIds') || searchParams.get('movePersonId') || ''
+  const movePersonIds = movePersonIdsParam
+    .split(',')
+    .map(id => id.trim())
+    .filter(Boolean)
 
   const isDirectPersonMode = mode === 'person'
+  const isMovePersonToNewFamily = movePersonIds.length > 0
+
   const selectedFamilyFromQuery = useMemo(
     () => families.find(f => f.id === familyIdFromQuery) || null,
     [families, familyIdFromQuery]
@@ -33,6 +41,20 @@ function CreateRecordPageContent() {
     const family = buildFamily(data)
     setNewFamily(family)
     dispatch(addFamily(family))
+
+    if (isMovePersonToNewFamily) {
+      movePersonIds.forEach(personId => {
+        dispatch(
+          updatePerson({
+            personId,
+            data: { familyId: family.id },
+          })
+        )
+      })
+      router.push(`/records?familyId=${family.id}`)
+      return
+    }
+
     setStep('person')
   }
 
@@ -54,6 +76,11 @@ function CreateRecordPageContent() {
   }
 
   const handleBackClick = () => {
+    if (isMovePersonToNewFamily) {
+      router.push('/records')
+      return
+    }
+
     if (isDirectPersonMode) {
       if (familyIdFromQuery) {
         router.push(`/records?familyId=${familyIdFromQuery}`)
@@ -72,11 +99,13 @@ function CreateRecordPageContent() {
     router.push('/records')
   }
 
-  const backLabel = isDirectPersonMode
+  const backLabel = isMovePersonToNewFamily
     ? 'Back to Records'
-    : step === 'person'
-      ? 'Back to Family'
-      : 'Back to Records'
+    : isDirectPersonMode
+      ? 'Back to Records'
+      : step === 'person'
+        ? 'Back to Family'
+        : 'Back to Records'
 
   const activeFamily = newFamily || selectedFamilyFromQuery
   const initialPersonData = familyIdFromQuery
@@ -95,7 +124,15 @@ function CreateRecordPageContent() {
           {backLabel}
         </button>
 
-        {!isDirectPersonMode && step === 'person' && (
+        {isMovePersonToNewFamily && (
+          <div className="app-info-banner">
+            <p className="app-info-text">
+              <span className="app-info-strong">Move Person:</span> Create a new family and the selected record(s) will be moved there.
+            </p>
+          </div>
+        )}
+
+        {!isDirectPersonMode && !isMovePersonToNewFamily && step === 'person' && (
           <div className="app-step-indicator">
             <span className="app-step-muted">Step 1: Family Created</span>
             <span className="app-step-arrow">-&gt;</span>
@@ -107,7 +144,7 @@ function CreateRecordPageContent() {
           <FamilyForm onSubmit={handleFamilySubmit} onCancel={() => router.push('/records')} />
         )}
 
-        {((!isDirectPersonMode && step === 'person') || isDirectPersonMode) && (
+        {((!isDirectPersonMode && step === 'person' && !isMovePersonToNewFamily) || isDirectPersonMode) && (
           <>
             {activeFamily && (
               <div className="app-info-banner">
@@ -130,7 +167,6 @@ function CreateRecordPageContent() {
     </div>
   )
 }
-
 
 export default function CreateRecordPage() {
   return (

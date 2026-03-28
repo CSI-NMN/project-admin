@@ -41,3 +41,7 @@ yarn-error.log*
 next-env.d.ts
 Our_Chruch_Website/node_modules
 Our_Chruch_Website/.next
+backend/.metadata
+backend/.vscode
+backend/.mvn
+backend/.m2

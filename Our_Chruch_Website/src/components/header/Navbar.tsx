@@ -1,6 +1,8 @@
 'use client'
 
-import { usePathname, useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { useEffect, useRef } from 'react'
+import { usePathname } from 'next/navigation'
 
 type Tab = {
   key: string
@@ -11,14 +13,22 @@ type Tab = {
 const tabs: Tab[] = [
   { key: 'home', label: 'Home', href: '/' },
   { key: 'records', label: 'Records', href: '/records' },
+  { key: 'celebrations', label: 'Celebrations', href: '/celebrations' },
   { key: 'filter', label: 'Filter', href: '/filter' },
   { key: 'admin', label: 'Admin', href: '/admin' },
   { key: 'accounts', label: 'Accounts', href: '/accounts' },
 ]
 
 export default function Navbar() {
-  const router = useRouter()
   const pathname = usePathname()
+  const shouldResetScrollRef = useRef(false)
+
+  useEffect(() => {
+    if (!shouldResetScrollRef.current) return
+
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+    shouldResetScrollRef.current = false
+  }, [pathname])
 
   const isActive = (href: string) => {
     if (href === '/') return pathname === '/'
@@ -29,19 +39,23 @@ export default function Navbar() {
     <header className="app-navbar">
       <div className="app-navbar-shell app-navbar-template-v2">
         <div className="app-navbar-left">
-          <button className="app-navbar-brand-v2" onClick={() => router.push('/')}>
+          <Link className="app-navbar-brand-v2" href="/">
             Our Church
-          </button>
+          </Link>
 
           <nav className="app-navbar-tabs-v2" aria-label="Primary">
             {tabs.map(tab => (
-              <button
+              <Link
                 key={tab.key}
-                onClick={() => router.push(tab.href)}
+                href={tab.href}
+                scroll
+                onClick={() => {
+                  shouldResetScrollRef.current = true
+                }}
                 className={`app-navbar-tab-v2 ${isActive(tab.href) ? 'app-navbar-tab-v2-active' : ''}`}
               >
                 {tab.label}
-              </button>
+              </Link>
             ))}
           </nav>
         </div>
@@ -56,4 +70,3 @@ export default function Navbar() {
     </header>
   )
 }
-
