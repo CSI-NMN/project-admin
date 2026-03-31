@@ -57,36 +57,50 @@ export default function FamilyDetailsSection({
           </div>
           <div className="records-family-grid">
             <div>
-              <p className="records-field-label">Family Code (Unique)</p>
-              <p className="records-field-value records-field-value-lg">{selectedFamily.family_code}</p>
+              <p className="records-field-label">Family Code</p>
+              <p className="records-field-value records-field-value-lg">{selectedFamily.familyCode}</p>
             </div>
             <div>
               <p className="records-field-label">Family Name</p>
-              <p className="records-field-value records-field-value-lg">{selectedFamily.family_name}</p>
+              <p className="records-field-value records-field-value-lg">{selectedFamily.familyName}</p>
+            </div>
+            <div>
+              <p className="records-field-label">House Number, Street Name</p>
+              <p className="records-field-value">{selectedFamily.address1 || 'N/A'}</p>
             </div>
             <div>
               <p className="records-field-label">Area</p>
               <p className="records-field-value records-field-value-lg">{selectedFamily.area || 'N/A'}</p>
             </div>
             <div>
-              <p className="records-field-label">Residential Address</p>
-              <p className="records-field-value">{selectedFamily.residential_address || 'N/A'}</p>
+              <p className="records-field-label">Landmark</p>
+              <p className="records-field-value">{selectedFamily.address2 || 'N/A'}</p>
             </div>
             <div>
-              <p className="records-field-label">Office Address</p>
-              <p className="records-field-value">{selectedFamily.office_address || 'N/A'}</p>
+              <p className="records-field-label">Pincode</p>
+              <p className="records-field-value">{selectedFamily.pincode || 'N/A'}</p>
+            </div>
+            <div>
+              <p className="records-field-label">City</p>
+              <p className="records-field-value records-field-value-lg">
+                {selectedFamily.city || 'N/A'}
+              </p>
+            </div>
+            <div>
+              <p className="records-field-label">State</p>
+              <p className="records-field-value">{selectedFamily.state || 'N/A'}</p>
             </div>
             <div>
               <p className="records-field-label">Family Head Name</p>
               <p className="records-field-value records-field-value-lg">
-                {selectedFamily.members.find(m => m.is_head)?.first_name}{' '}
-                {selectedFamily.members.find(m => m.is_head)?.last_name}
+                {selectedFamily.members.find(m => m.isHead)?.firstName}{' '}
+                {selectedFamily.members.find(m => m.isHead)?.lastName}
               </p>
             </div>
             <div className="col-span-3">
               <p className="records-field-label">Head Phone Number</p>
               <p className="records-field-value records-field-value-lg">
-                {selectedFamily.members.find(m => m.is_head)?.mobile_no || 'N/A'}
+                {selectedFamily.members.find(m => m.isHead)?.mobileNo || 'N/A'}
               </p>
             </div>
           </div>
@@ -113,7 +127,7 @@ export default function FamilyDetailsSection({
               {selectedHierarchyPeople.length > 0 && (
                 <p className="records-hierarchy-sub">
                   {selectedHierarchyPeople
-                    .map(person => `${person.first_name} ${person.last_name}`)
+                    .map(person => `${person.firstName} ${person.lastName}`)
                     .join(', ')}
                 </p>
               )}
@@ -155,11 +169,11 @@ export default function FamilyDetailsSection({
                   }`}
                 >
                   <td className="records-table-td records-table-td-strong">
-                    {person.first_name} {person.last_name}
+                    {person.firstName} {person.lastName}
                   </td>
-                  <td className="records-table-td">{person.subscriptionCardNo}</td>
-                  <td className="records-table-td">{person.relationship_type}</td>
-                  <td className="records-table-td">{person.mobile_no}</td>
+                  <td className="records-table-td">{person.memberNo}</td>
+                  <td className="records-table-td">{person.relationshipType}</td>
+                  <td className="records-table-td">{person.mobileNo}</td>
                   <td className="records-table-td">{person.email}</td>
                   <td className="records-table-td">
                     {showHierarchyEditor ? (
@@ -178,7 +192,7 @@ export default function FamilyDetailsSection({
                         <button
                           onClick={() => onEditPerson(person.id)}
                           className="records-action-icon-btn"
-                          aria-label={`Edit ${person.first_name} ${person.last_name}`}
+                          aria-label={`Edit ${person.firstName} ${person.lastName}`}
                           title="Edit"
                         >
                           <EditIcon />
@@ -186,7 +200,7 @@ export default function FamilyDetailsSection({
                         <button
                           onClick={() => onDeleteRequest(person)}
                           className="records-action-icon-btn records-action-icon-btn-delete"
-                          aria-label={`Delete ${person.first_name} ${person.last_name}`}
+                          aria-label={`Delete ${person.firstName} ${person.lastName}`}
                           title="Delete"
                         >
                           <DeleteIcon />
@@ -211,3 +225,4 @@ export default function FamilyDetailsSection({
     </>
   )
 }
+

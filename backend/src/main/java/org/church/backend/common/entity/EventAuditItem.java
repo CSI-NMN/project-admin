@@ -28,19 +28,19 @@ public class EventAuditItem {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "\"createdAt\"", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "event_id", nullable = false)
+    @JoinColumn(name = "\"eventId\"", nullable = false)
     private Event event;
 
-    @Column(nullable = false, length = 20)
+    @Column(name = "\"type\"", nullable = false, length = 20)
     private String type;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(name = "\"description\"", nullable = false, columnDefinition = "TEXT")
     private String description;
 
-    @Column(precision = 12, scale = 2)
+    @Column(name = "\"amount\"", precision = 12, scale = 2)
     private BigDecimal amount;
 }

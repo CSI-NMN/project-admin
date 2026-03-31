@@ -8,6 +8,8 @@ import org.church.backend.dto.FamilyCreateRequest;
 import org.church.backend.dto.FamilyFilter;
 import org.church.backend.dto.FamilyResponse;
 import org.church.backend.dto.FamilyUpdateRequest;
+import org.church.backend.dto.CelebrationsResponse;
+import org.church.backend.dto.MovePersonRequest;
 import org.church.backend.dto.PersonFilter;
 import org.church.backend.dto.PersonCreateRequest;
 import org.church.backend.dto.PersonResponse;
@@ -27,11 +29,13 @@ public interface IRecordsService {
 
     ODataCollectionResponse<FamilyResponse> search(
             UUID familyId,
-            String subscriptionId,
+            UUID familyHeadId,
             String memberName,
             String phoneNumber,
             String aadhaarNumber,
             ODataQueryOptions queryOptions);
+
+    CelebrationsResponse getCelebrations(Integer month);
 
     ODataCollectionResponse<PersonResponse> getFamilyMembers(UUID familyId, PersonFilter filter, ODataQueryOptions queryOptions);
 
@@ -42,5 +46,7 @@ public interface IRecordsService {
     PersonResponse updateFamilyMember(UUID familyId, UUID personId, PersonUpdateRequest request);
 
     void deleteFamilyMember(UUID familyId, UUID personId);
+
+    PersonResponse moveFamilyMember(UUID personId, MovePersonRequest request);
 }
 

@@ -62,7 +62,7 @@ export default function SplitFamilyModal({
             <>
               <input
                 type="text"
-                placeholder="Search family by name, code, or id"
+                placeholder="Search family by name or code"
                 value={familySearchQuery}
                 onChange={event => onFamilySearchChange(event.target.value)}
                 className="app-input records-split-family-search"
@@ -78,8 +78,8 @@ export default function SplitFamilyModal({
                         targetFamilyId === family.id ? 'records-split-family-item-active' : ''
                       }`}
                     >
-                      <span>{family.family_name}</span>
-                      <span className="records-split-family-code">{family.family_code}</span>
+                      <span>{family.familyName}</span>
+                      <span className="records-split-family-code">{family.familyCode}</span>
                     </button>
                   ))
                 ) : (
@@ -109,3 +109,4 @@ export default function SplitFamilyModal({
     </div>
   )
 }
+

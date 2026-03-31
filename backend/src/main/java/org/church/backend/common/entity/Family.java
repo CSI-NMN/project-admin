@@ -28,29 +28,38 @@ public class Family {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "\"createdAt\"", updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
+    @Column(name = "\"updatedAt\"")
     private LocalDateTime updatedAt;
 
-    @Column(name = "family_code", nullable = false, unique = true, length = 50)
+    @Column(name = "\"familyCode\"", nullable = false, unique = true, length = 50)
     private String familyCode;
 
-    @Column(name = "family_name", nullable = false, length = 150)
+    @Column(name = "\"familyName\"", nullable = false, length = 150)
     private String familyName;
 
-    @Column(name = "residential_address", columnDefinition = "TEXT")
-    private String residentialAddress;
-
-    @Column(name = "office_address", columnDefinition = "TEXT")
-    private String officeAddress;
-
-    @Column(length = 100)
+    @Column(name = "\"area\"", length = 100)
     private String area;
 
-    @Column(name = "subscription_id", length = 100)
-    private String subscriptionId;
+    @Column(name = "\"address1\"", length = 200)
+    private String address1;
+
+    @Column(name = "\"address2\"", length = 200)
+    private String address2;
+
+    @Column(name = "\"pincode\"", length = 20)
+    private String pincode;
+
+    @Column(name = "\"city\"", length = 100)
+    private String city;
+
+    @Column(name = "\"state\"", length = 100)
+    private String state;
+
+    @Column(name = "\"familyHeadId\"")
+    private UUID familyHeadId;
 
     @OneToMany(mappedBy = "family", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Person> members = new ArrayList<>();

@@ -3,8 +3,13 @@ package org.church.backend.dto;
 public record FamilyFilter(
         String familyCode,
         String familyName,
+        String address1,
         String area,
-        String subscriptionId
+        String address2,
+        String pincode,
+        String city,
+        String state,
+        java.util.UUID familyHeadId
 ) {
 }
 

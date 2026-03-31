@@ -15,12 +15,14 @@ public final class FamilyMapper {
 
     public static Family toEntity(FamilyCreateRequest request) {
         Family family = new Family();
-        family.setFamilyCode(request.familyCode().trim());
+        family.setFamilyCode(request.familyCode() == null ? "" : request.familyCode().trim());
         family.setFamilyName(request.familyName().trim());
-        family.setResidentialAddress(request.residentialAddress());
-        family.setOfficeAddress(request.officeAddress());
-        family.setArea(request.area());
-        family.setSubscriptionId(request.subscriptionId());
+        family.setAddress1(trimToNull(request.address1()));
+        family.setArea(trimToNull(request.area()));
+        family.setAddress2(trimToNull(request.address2()));
+        family.setPincode(trimToNull(request.pincode()));
+        family.setCity(trimToNull(request.city()));
+        family.setState(trimToNull(request.state()));
         return family;
     }
 
@@ -31,17 +33,23 @@ public final class FamilyMapper {
         if (request.familyName() != null) {
             family.setFamilyName(request.familyName().trim());
         }
-        if (request.residentialAddress() != null) {
-            family.setResidentialAddress(request.residentialAddress());
-        }
-        if (request.officeAddress() != null) {
-            family.setOfficeAddress(request.officeAddress());
+        if (request.address1() != null) {
+            family.setAddress1(trimToNull(request.address1()));
         }
         if (request.area() != null) {
-            family.setArea(request.area());
+            family.setArea(trimToNull(request.area()));
         }
-        if (request.subscriptionId() != null) {
-            family.setSubscriptionId(request.subscriptionId());
+        if (request.address2() != null) {
+            family.setAddress2(trimToNull(request.address2()));
+        }
+        if (request.pincode() != null) {
+            family.setPincode(trimToNull(request.pincode()));
+        }
+        if (request.city() != null) {
+            family.setCity(trimToNull(request.city()));
+        }
+        if (request.state() != null) {
+            family.setState(trimToNull(request.state()));
         }
     }
 
@@ -50,13 +58,24 @@ public final class FamilyMapper {
                 family.getId(),
                 family.getFamilyCode(),
                 family.getFamilyName(),
-                family.getResidentialAddress(),
-                family.getOfficeAddress(),
+                family.getAddress1(),
                 family.getArea(),
-                family.getSubscriptionId(),
+                family.getAddress2(),
+                family.getPincode(),
+                family.getCity(),
+                family.getState(),
+                family.getFamilyHeadId(),
                 family.getCreatedAt(),
                 family.getUpdatedAt(),
                 members);
+    }
+
+    private static String trimToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 }
 

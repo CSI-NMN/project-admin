@@ -1,52 +1,94 @@
 'use client'
 
-import { Suspense, useMemo } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import RecordsForm from '@/components/records/RecordsForm'
-import { Person } from '@/types/records'
-import { useAppDispatch, useAppSelector } from '@/store/hooks'
-import { updatePerson } from '@/store/slices/recordsSlice'
-import { findPersonWithFamily } from '@/utils/records'
+import { Family, Person } from '@/types/records'
+import { recordsService } from '@/store/api/recordsApi'
+import { showErrorToast } from '@/components/common/toast'
 
 function EditRecordPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const dispatch = useAppDispatch()
 
   const personId = searchParams.get('id')
+  const familyId = searchParams.get('familyId')
   const source = searchParams.get('source')
-  const families = useAppSelector(state => state.records.families)
 
-  const record = useMemo(() => findPersonWithFamily(families, personId), [families, personId])
+  const [families, setFamilies] = useState<Family[]>([])
+  const [record, setRecord] = useState<Person | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  const buildReturnUrl = (familyId?: string) => {
+  useEffect(() => {
+    if (!personId || !familyId) {
+      setLoading(false)
+      setRecord(null)
+      return
+    }
+
+    let active = true
+    setLoading(true)
+
+    Promise.all([
+      recordsService.getFamilyMemberById(familyId, personId),
+      recordsService.listFamilies({ $top: 1000, $skip: 0 }),
+    ])
+      .then(([person, familyList]) => {
+        if (!active) return
+        setRecord(person)
+        setFamilies(familyList)
+      })
+      .catch(() => {
+        if (!active) return
+        setRecord(null)
+        setFamilies([])
+      })
+      .finally(() => {
+        if (!active) return
+        setLoading(false)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [familyId, personId])
+
+  const buildReturnUrl = (resolvedFamilyId?: string) => {
     if (source === 'celebrations') {
       return '/celebrations'
     }
 
-    if (familyId) {
-      return `/records?familyId=${familyId}`
+    if (resolvedFamilyId) {
+      return `/records?familyId=${resolvedFamilyId}`
     }
 
     return '/records'
   }
 
-  const handleSubmit = (data: Partial<Person>) => {
-    if (!personId) return
+  const handleSubmit = async (data: Partial<Person>) => {
+    if (!personId || !familyId) return
 
-    dispatch(
-      updatePerson({
-        personId,
-        data,
-      })
-    )
-
-    const targetFamilyId = data.familyId || record?.person.familyId
-    router.push(buildReturnUrl(targetFamilyId))
+    try {
+      const updated = await recordsService.updateFamilyMember(familyId, personId, data)
+      router.push(buildReturnUrl(updated.familyId))
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to update person'
+      showErrorToast(message)
+    }
   }
 
   const handleCancel = () => {
-    router.push(buildReturnUrl(record?.person.familyId))
+    router.push(buildReturnUrl(record?.familyId || familyId || undefined))
+  }
+
+  if (loading) {
+    return (
+      <div className="app-page">
+        <div className="app-shell">
+          <p className="app-empty-text">Loading...</p>
+        </div>
+      </div>
+    )
   }
 
   if (!record) {
@@ -70,7 +112,7 @@ function EditRecordPageContent() {
         </button>
 
         <RecordsForm
-          initialData={record.person}
+          initialData={record}
           isNew={false}
           families={families}
           onSubmit={handleSubmit}
@@ -80,7 +122,6 @@ function EditRecordPageContent() {
     </div>
   )
 }
-
 
 export default function EditRecordPage() {
   return (

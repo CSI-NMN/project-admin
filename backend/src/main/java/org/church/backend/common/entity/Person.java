@@ -28,67 +28,67 @@ public class Person {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "\"createdAt\"", updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
+    @Column(name = "\"updatedAt\"")
     private LocalDateTime updatedAt;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "family_id", nullable = false)
+    @JoinColumn(name = "\"familyId\"", nullable = false)
     private Family family;
 
-    @Column(name = "member_no", length = 50)
+    @Column(name = "\"memberNo\"", length = 50)
     private String memberNo;
 
-    @Column(name = "first_name", nullable = false, length = 100)
+    @Column(name = "\"firstName\"", nullable = false, length = 100)
     private String firstName;
 
-    @Column(name = "last_name", length = 100)
+    @Column(name = "\"lastName\"", length = 100)
     private String lastName;
 
-    @Column(name = "father_name", length = 100)
+    @Column(name = "\"fatherName\"", length = 100)
     private String fatherName;
 
-    @Column(name = "mother_name", length = 100)
+    @Column(name = "\"motherName\"", length = 100)
     private String motherName;
 
-    @Column(length = 20)
+    @Column(name = "\"gender\"", length = 20)
     private String gender;
 
-    @Column(name = "marital_status", length = 30)
+    @Column(name = "\"maritalStatus\"", length = 30)
     private String maritalStatus;
 
-    @Column(name = "date_of_birth")
+    @Column(name = "\"dateOfBirth\"")
     private LocalDate dateOfBirth;
 
-    @Column(name = "date_of_baptism")
+    @Column(name = "\"dateOfBaptism\"")
     private LocalDate dateOfBaptism;
 
-    @Column(name = "date_of_confirmation")
+    @Column(name = "\"dateOfConfirmation\"")
     private LocalDate dateOfConfirmation;
 
-    @Column(name = "date_of_marriage")
+    @Column(name = "\"dateOfMarriage\"")
     private LocalDate dateOfMarriage;
 
-    @Column(name = "blood_group", length = 10)
+    @Column(name = "\"bloodGroup\"", length = 10)
     private String bloodGroup;
 
-    @Column(length = 120)
+    @Column(name = "\"profession\"", length = 120)
     private String profession;
 
-    @Column(name = "mobile_no", length = 30)
+    @Column(name = "\"mobileNo\"", length = 30)
     private String mobileNo;
 
-    @Column(name = "aadhaar_number", unique = true, length = 20)
+    @Column(name = "\"aadhaarNumber\"", unique = true, length = 20)
     private String aadhaarNumber;
 
-    @Column(length = 120)
+    @Column(name = "\"email\"", length = 120)
     private String email;
 
-    @Column(name = "relationship_type", length = 50)
+    @Column(name = "\"relationshipType\"", length = 50)
     private String relationshipType;
 
-    @Column(name = "is_head", nullable = false)
+    @Column(name = "\"isHead\"", nullable = false)
     private Boolean isHead = false;
 }

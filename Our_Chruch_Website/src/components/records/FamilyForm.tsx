@@ -11,11 +11,14 @@ interface FamilyFormProps {
 }
 
 const getInitialState = (initialData?: Partial<Family>): Partial<Family> => ({
-  family_code: initialData?.family_code || '',
-  family_name: initialData?.family_name || '',
-  residential_address: initialData?.residential_address || '',
-  office_address: initialData?.office_address || '',
+  familyCode: initialData?.familyCode || '',
+  familyName: initialData?.familyName || '',
+  address1: initialData?.address1 || '',
   area: initialData?.area || '',
+  address2: initialData?.address2 || '',
+  pincode: initialData?.pincode || '',
+  city: initialData?.city || '',
+  state: initialData?.state || '',
 })
 
 export default function FamilyForm({
@@ -36,7 +39,36 @@ export default function FamilyForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    onSubmit(formData)
+    const { id, createdAt, updatedAt, members, ...payload } = formData
+    void id
+    void createdAt
+    void updatedAt
+    void members
+
+    if (!isEdit) {
+      onSubmit({ ...payload, familyCode: undefined })
+      return
+    }
+
+    const changedPayload: Partial<Family> = {}
+    const base = initialData || {}
+    const fields = Object.keys(payload) as (keyof Family)[]
+
+    fields.forEach(field => {
+      const currentValue = payload[field]
+      const previousValue = base[field]
+
+      const normalizedCurrent =
+        typeof currentValue === 'string' && currentValue.trim() === '' ? undefined : currentValue
+      const normalizedPrevious =
+        typeof previousValue === 'string' && previousValue.trim() === '' ? undefined : previousValue
+
+      if (normalizedCurrent !== normalizedPrevious) {
+        changedPayload[field] = currentValue
+      }
+    })
+
+    onSubmit(changedPayload)
   }
 
   return (
@@ -47,23 +79,28 @@ export default function FamilyForm({
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="app-form-grid">
-          <div>
-            <label className="app-label">Family Code (Unique)</label>
-            <input
-              type="text"
-              value={formData.family_code || ''}
-              onChange={e => handleChange('family_code', e.target.value)}
-              className="app-input"
-              placeholder="e.g., FAM001"
-              required
-            />
-          </div>
+          {isEdit && (
+            <div>
+              <label className="app-label">Family Code</label>
+              <input type="text" value={formData.familyCode || ''} className="app-input" readOnly />
+            </div>
+          )}
           <div>
             <label className="app-label">Family Name</label>
             <input
               type="text"
-              value={formData.family_name || ''}
-              onChange={e => handleChange('family_name', e.target.value)}
+              value={formData.familyName || ''}
+              onChange={e => handleChange('familyName', e.target.value)}
+              className="app-input"
+              required
+            />
+          </div>
+          <div>
+            <label className="app-label">House Number, Street Name</label>
+            <input
+              type="text"
+              value={formData.address1 || ''}
+              onChange={e => handleChange('address1', e.target.value)}
               className="app-input"
               required
             />
@@ -78,20 +115,38 @@ export default function FamilyForm({
             />
           </div>
           <div>
-            <label className="app-label">Residential Address</label>
+            <label className="app-label">Landmark (Optional)</label>
             <input
               type="text"
-              value={formData.residential_address || ''}
-              onChange={e => handleChange('residential_address', e.target.value)}
+              value={formData.address2 || ''}
+              onChange={e => handleChange('address2', e.target.value)}
               className="app-input"
             />
           </div>
-          <div className="col-span-2">
-            <label className="app-label">Office Address</label>
+          <div>
+            <label className="app-label">Pincode</label>
             <input
               type="text"
-              value={formData.office_address || ''}
-              onChange={e => handleChange('office_address', e.target.value)}
+              value={formData.pincode || ''}
+              onChange={e => handleChange('pincode', e.target.value)}
+              className="app-input"
+            />
+          </div>
+          <div>
+            <label className="app-label">City</label>
+            <input
+              type="text"
+              value={formData.city || ''}
+              onChange={e => handleChange('city', e.target.value)}
+              className="app-input"
+            />
+          </div>
+          <div>
+            <label className="app-label">State</label>
+            <input
+              type="text"
+              value={formData.state || ''}
+              onChange={e => handleChange('state', e.target.value)}
               className="app-input"
             />
           </div>
@@ -109,3 +164,4 @@ export default function FamilyForm({
     </div>
   )
 }
+

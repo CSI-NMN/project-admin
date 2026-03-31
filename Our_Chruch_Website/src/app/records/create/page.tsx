@@ -1,21 +1,18 @@
 'use client'
 
-import { Suspense, useMemo, useState } from 'react'
+import { Suspense, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import RecordsForm from '@/components/records/RecordsForm'
 import FamilyForm from '@/components/records/FamilyForm'
 import { Family, Person } from '@/types/records'
-import { useAppDispatch, useAppSelector } from '@/store/hooks'
-import { addFamily, addPerson, updatePerson } from '@/store/slices/recordsSlice'
-import { buildFamily, buildPerson } from '@/utils/records'
+import { recordsService } from '@/store/api/recordsApi'
+import { showErrorToast, showInfoToast } from '@/components/common/toast'
 
 type Step = 'family' | 'person'
 
 function CreateRecordPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const dispatch = useAppDispatch()
-  const families = useAppSelector(state => state.records.families)
 
   const mode = searchParams.get('mode')
   const familyIdFromQuery = searchParams.get('familyId') || ''
@@ -29,50 +26,73 @@ function CreateRecordPageContent() {
   const isDirectPersonMode = mode === 'person'
   const isMovePersonToNewFamily = movePersonIds.length > 0
 
+  const [families, setFamilies] = useState<Family[]>([])
+  const [step, setStep] = useState<Step>(isDirectPersonMode ? 'person' : 'family')
+  const [familyDraft, setFamilyDraft] = useState<Partial<Family> | null>(null)
+
   const selectedFamilyFromQuery = useMemo(
     () => families.find(f => f.id === familyIdFromQuery) || null,
     [families, familyIdFromQuery]
   )
 
-  const [step, setStep] = useState<Step>(isDirectPersonMode ? 'person' : 'family')
-  const [newFamily, setNewFamily] = useState<Family | null>(null)
-
-  const handleFamilySubmit = (data: Partial<Family>) => {
-    const family = buildFamily(data)
-    setNewFamily(family)
-    dispatch(addFamily(family))
-
-    if (isMovePersonToNewFamily) {
-      movePersonIds.forEach(personId => {
-        dispatch(
-          updatePerson({
-            personId,
-            data: { familyId: family.id },
-          })
-        )
+  useEffect(() => {
+    recordsService
+      .listFamilies({
+        $top: 1000,
+        $skip: 0,
       })
-      router.push(`/records?familyId=${family.id}`)
-      return
-    }
+      .then(data => {
+        setFamilies(data)
+      })
+      .catch(() => {
+        setFamilies([])
+      })
+  }, [])
 
-    setStep('person')
+  const handleFamilySubmit = async (data: Partial<Family>) => {
+    try {
+      if (isMovePersonToNewFamily) {
+        const family = await recordsService.createFamily(data)
+        setFamilies(prev => [...prev, family])
+        await Promise.all(
+          movePersonIds.map(personId => recordsService.moveFamilyMember(personId, family.id))
+        )
+        router.push(`/records?familyId=${family.id}`)
+        return
+      }
+
+      setFamilyDraft(data)
+      setStep('person')
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to create family'
+      showErrorToast(message)
+    }
   }
 
-  const handlePersonSubmit = (data: Partial<Person>) => {
-    const targetFamilyId = newFamily?.id || data.familyId || familyIdFromQuery
-    if (!targetFamilyId) {
-      alert('Please select a family before creating a person.')
-      return
-    }
+  const handlePersonSubmit = async (data: Partial<Person>) => {
+    try {
+      const targetFamilyId = data.familyId || familyIdFromQuery
+      if (targetFamilyId) {
+        await recordsService.addFamilyMember(targetFamilyId, data)
+        router.push(`/records?familyId=${targetFamilyId}`)
+        return
+      }
 
-    const person = buildPerson(data, targetFamilyId)
-    dispatch(
-      addPerson({
-        familyId: targetFamilyId,
-        person,
+      if (!familyDraft) {
+        showInfoToast('Please enter family details first.')
+        return
+      }
+
+      const createdFamily = await recordsService.createFamily({
+        ...familyDraft,
+        members: [data as Person],
       })
-    )
-    router.push(`/records?familyId=${targetFamilyId}`)
+      setFamilies(prev => [...prev, createdFamily])
+      router.push(`/records?familyId=${createdFamily.id}`)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to create person'
+      showErrorToast(message)
+    }
   }
 
   const handleBackClick = () => {
@@ -92,7 +112,6 @@ function CreateRecordPageContent() {
 
     if (step === 'person') {
       setStep('family')
-      setNewFamily(null)
       return
     }
 
@@ -107,12 +126,9 @@ function CreateRecordPageContent() {
         ? 'Back to Family'
         : 'Back to Records'
 
-  const activeFamily = newFamily || selectedFamilyFromQuery
   const initialPersonData = familyIdFromQuery
     ? { familyId: familyIdFromQuery }
-    : newFamily
-      ? { familyId: newFamily.id }
-      : undefined
+    : undefined
 
   return (
     <div className="app-page">
@@ -134,22 +150,28 @@ function CreateRecordPageContent() {
 
         {!isDirectPersonMode && !isMovePersonToNewFamily && step === 'person' && (
           <div className="app-step-indicator">
-            <span className="app-step-muted">Step 1: Family Created</span>
+            <span className="app-step-muted">Step 1: Family Details Saved</span>
             <span className="app-step-arrow">-&gt;</span>
             <span className="app-step-active">Step 2: Add Person</span>
           </div>
         )}
 
         {!isDirectPersonMode && step === 'family' && (
-          <FamilyForm onSubmit={handleFamilySubmit} onCancel={() => router.push('/records')} />
+          <FamilyForm
+            initialData={familyDraft || undefined}
+            onSubmit={handleFamilySubmit}
+            onCancel={() => router.push('/records')}
+          />
         )}
 
         {((!isDirectPersonMode && step === 'person' && !isMovePersonToNewFamily) || isDirectPersonMode) && (
           <>
-            {activeFamily && (
+            {(familyDraft || selectedFamilyFromQuery) && (
               <div className="app-info-banner">
                 <p className="app-info-text">
-                  <span className="app-info-strong">Family:</span> {activeFamily.family_name} ({activeFamily.family_code})
+                  <span className="app-info-strong">Family:</span>{' '}
+                  {familyDraft?.familyName || selectedFamilyFromQuery?.familyName}
+                  {(selectedFamilyFromQuery?.familyCode && !familyDraft) ? ` (${selectedFamilyFromQuery.familyCode})` : ''}
                 </p>
               </div>
             )}
@@ -157,7 +179,7 @@ function CreateRecordPageContent() {
               initialData={initialPersonData}
               isNew={true}
               families={families}
-              hideFamily={Boolean(familyIdFromQuery || newFamily?.id)}
+              hideFamily={Boolean(familyIdFromQuery || familyDraft)}
               onSubmit={handlePersonSubmit}
               onCancel={handleBackClick}
             />

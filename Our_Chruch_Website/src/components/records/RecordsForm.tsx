@@ -22,12 +22,11 @@ export default function RecordsForm({
 }: RecordsFormProps) {
   const [formData, setFormData] = useState<Partial<Person>>(
     initialData || {
-      id: '',
-      subscriptionCardNo: '',
-      first_name: '',
-      last_name: '',
-      relationship_type: 'Child',
-      is_head: false,
+      memberNo: '',
+      firstName: '',
+      lastName: '',
+      relationshipType: 'Child',
+      isHead: false,
       familyId: '',
     }
   )
@@ -38,7 +37,35 @@ export default function RecordsForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    onSubmit(formData)
+    const { id, createdAt, updatedAt, ...payload } = formData
+    void id
+    void createdAt
+    void updatedAt
+
+    if (isNew) {
+      onSubmit(payload)
+      return
+    }
+
+    const changedPayload: Partial<Person> = {}
+    const base = initialData || {}
+    const fields = Object.keys(payload) as (keyof Person)[]
+
+    fields.forEach(field => {
+      const currentValue = payload[field]
+      const previousValue = base[field]
+
+      const normalizedCurrent =
+        typeof currentValue === 'string' && currentValue.trim() === '' ? undefined : currentValue
+      const normalizedPrevious =
+        typeof previousValue === 'string' && previousValue.trim() === '' ? undefined : previousValue
+
+      if (normalizedCurrent !== normalizedPrevious) {
+        changedPayload[field] = currentValue
+      }
+    })
+
+    onSubmit(changedPayload)
   }
 
   return (
@@ -53,8 +80,8 @@ export default function RecordsForm({
             <label className="app-label">First Name</label>
             <input
               type="text"
-              value={formData.first_name || ''}
-              onChange={e => handleChange('first_name', e.target.value)}
+              value={formData.firstName || ''}
+              onChange={e => handleChange('firstName', e.target.value)}
               className="app-input"
               required
             />
@@ -63,8 +90,8 @@ export default function RecordsForm({
             <label className="app-label">Last Name</label>
             <input
               type="text"
-              value={formData.last_name || ''}
-              onChange={e => handleChange('last_name', e.target.value)}
+              value={formData.lastName || ''}
+              onChange={e => handleChange('lastName', e.target.value)}
               className="app-input"
               required
             />
@@ -73,8 +100,8 @@ export default function RecordsForm({
             <label className="app-label">Subscription Card No</label>
             <input
               type="text"
-              value={formData.subscriptionCardNo || ''}
-              onChange={e => handleChange('subscriptionCardNo', e.target.value)}
+              value={formData.memberNo || ''}
+              onChange={e => handleChange('memberNo', e.target.value)}
               className="app-input"
               required
             />
@@ -82,8 +109,8 @@ export default function RecordsForm({
           <div>
             <label className="app-label">Relationship Type</label>
             <select
-              value={formData.relationship_type || ''}
-              onChange={e => handleChange('relationship_type', e.target.value)}
+              value={formData.relationshipType || ''}
+              onChange={e => handleChange('relationshipType', e.target.value)}
               className="app-input"
             >
               <option value="Head">Head</option>
@@ -109,8 +136,8 @@ export default function RecordsForm({
           <div>
             <label className="app-label">Marital Status</label>
             <select
-              value={formData.marital_status || ''}
-              onChange={e => handleChange('marital_status', e.target.value)}
+              value={formData.maritalStatus || ''}
+              onChange={e => handleChange('maritalStatus', e.target.value)}
               className="app-input"
             >
               <option value="">Select Status</option>
@@ -124,8 +151,8 @@ export default function RecordsForm({
             <label className="app-label">Date of Birth</label>
             <input
               type="date"
-              value={formData.date_of_birth || ''}
-              onChange={e => handleChange('date_of_birth', e.target.value)}
+              value={formData.dateOfBirth || ''}
+              onChange={e => handleChange('dateOfBirth', e.target.value)}
               className="app-input"
             />
           </div>
@@ -133,8 +160,17 @@ export default function RecordsForm({
             <label className="app-label">Mobile No</label>
             <input
               type="tel"
-              value={formData.mobile_no || ''}
-              onChange={e => handleChange('mobile_no', e.target.value)}
+              value={formData.mobileNo || ''}
+              onChange={e => handleChange('mobileNo', e.target.value)}
+              className="app-input"
+            />
+          </div>
+          <div>
+            <label className="app-label">Aadhaar Number</label>
+            <input
+              type="text"
+              value={formData.aadhaarNumber || ''}
+              onChange={e => handleChange('aadhaarNumber', e.target.value)}
               className="app-input"
             />
           </div>
@@ -159,8 +195,8 @@ export default function RecordsForm({
           <div>
             <label className="app-label">Blood Group</label>
             <select
-              value={formData.blood_group || ''}
-              onChange={e => handleChange('blood_group', e.target.value)}
+              value={formData.bloodGroup || ''}
+              onChange={e => handleChange('bloodGroup', e.target.value)}
               className="app-input"
             >
               <option value="">Select Blood Group</option>
@@ -175,29 +211,11 @@ export default function RecordsForm({
             </select>
           </div>
           <div>
-            <label className="app-label">Father Name</label>
-            <input
-              type="text"
-              value={formData.father_name || ''}
-              onChange={e => handleChange('father_name', e.target.value)}
-              className="app-input"
-            />
-          </div>
-          <div>
-            <label className="app-label">Mother Name</label>
-            <input
-              type="text"
-              value={formData.mother_name || ''}
-              onChange={e => handleChange('mother_name', e.target.value)}
-              className="app-input"
-            />
-          </div>
-          <div>
             <label className="app-label">Date of Baptism</label>
             <input
               type="date"
-              value={formData.date_of_baptism || ''}
-              onChange={e => handleChange('date_of_baptism', e.target.value)}
+              value={formData.dateOfBaptism || ''}
+              onChange={e => handleChange('dateOfBaptism', e.target.value)}
               className="app-input"
             />
           </div>
@@ -205,8 +223,8 @@ export default function RecordsForm({
             <label className="app-label">Date of Confirmation</label>
             <input
               type="date"
-              value={formData.date_of_confirmation || ''}
-              onChange={e => handleChange('date_of_confirmation', e.target.value)}
+              value={formData.dateOfConfirmation || ''}
+              onChange={e => handleChange('dateOfConfirmation', e.target.value)}
               className="app-input"
             />
           </div>
@@ -214,8 +232,8 @@ export default function RecordsForm({
             <label className="app-label">Date of Marriage</label>
             <input
               type="date"
-              value={formData.date_of_marriage || ''}
-              onChange={e => handleChange('date_of_marriage', e.target.value)}
+              value={formData.dateOfMarriage || ''}
+              onChange={e => handleChange('dateOfMarriage', e.target.value)}
               className="app-input"
             />
           </div>
@@ -231,7 +249,7 @@ export default function RecordsForm({
                 <option value="">Select Family</option>
                 {families.map(family => (
                   <option key={family.id} value={family.id}>
-                    {family.family_name}
+                    {family.familyName}
                   </option>
                 ))}
               </select>
@@ -251,3 +269,4 @@ export default function RecordsForm({
     </div>
   )
 }
+

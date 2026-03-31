@@ -28,29 +28,29 @@ public class TransactionRecord {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "\"createdAt\"", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable = false, length = 20)
+    @Column(name = "\"type\"", nullable = false, length = 20)
     private String type;
 
-    @Column(nullable = false, length = 20)
+    @Column(name = "\"category\"", nullable = false, length = 20)
     private String category;
 
-    @Column(nullable = false, precision = 12, scale = 2)
+    @Column(name = "\"amount\"", nullable = false, precision = 12, scale = 2)
     private BigDecimal amount;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "financial_year_id", nullable = false)
+    @JoinColumn(name = "\"financialYearId\"", nullable = false)
     private FinancialYear financialYear;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "event_id")
+    @JoinColumn(name = "\"eventId\"")
     private Event event;
 
-    @Column(name = "month")
+    @Column(name = "\"month\"")
     private Integer month;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "\"description\"", columnDefinition = "TEXT")
     private String description;
 }

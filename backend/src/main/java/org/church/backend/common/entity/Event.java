@@ -25,21 +25,21 @@ public class Event {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "\"createdAt\"", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable = false, length = 150)
+    @Column(name = "\"name\"", nullable = false, length = 150)
     private String name;
 
-    @Column(name = "start_date")
+    @Column(name = "\"startDate\"")
     private LocalDate startDate;
 
-    @Column(name = "end_date")
+    @Column(name = "\"endDate\"")
     private LocalDate endDate;
 
-    @Column(nullable = false, length = 20)
+    @Column(name = "\"status\"", nullable = false, length = 20)
     private String status = "LIVE";
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "\"description\"", columnDefinition = "TEXT")
     private String description;
 }

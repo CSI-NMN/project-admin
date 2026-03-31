@@ -1,7 +1,9 @@
-import { Person } from '@/types/records'
-
 interface DeleteRecordModalProps {
-  deleteCandidate: Person | null
+  deleteCandidate: {
+    id: string
+    firstName: string
+    lastName?: string
+  } | null
   onCancel: () => void
   onConfirm: () => void
 }
@@ -19,7 +21,7 @@ export default function DeleteRecordModal({
         <div className="records-modal-header">
           <h3 className="records-modal-title">Delete Record</h3>
           <p className="records-modal-subtitle">
-            Are you sure you want to delete {deleteCandidate.first_name} {deleteCandidate.last_name}?
+            Are you sure you want to delete {deleteCandidate.firstName} {deleteCandidate.lastName}?
           </p>
         </div>
         <div className="records-modal-footer">

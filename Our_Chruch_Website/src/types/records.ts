@@ -1,33 +1,64 @@
 export interface Family {
   id: string
-  family_code: string
-  family_name: string
-  residential_address?: string
-  office_address?: string
+  familyCode: string
+  familyName: string
+  address1?: string
   area?: string
-  created_at: string
-  updated_at: string
+  address2?: string
+  pincode?: string
+  city?: string
+  state?: string
+  familyHeadId?: string
+  createdAt?: string
+  updatedAt?: string
   members: Person[]
 }
 
 export interface Person {
   id: string
-  subscriptionCardNo: string
-  first_name: string
-  last_name: string
-  father_name?: string
-  mother_name?: string
-  gender?: string
-  marital_status?: string
-  date_of_birth?: string
-  date_of_baptism?: string
-  date_of_confirmation?: string
-  date_of_marriage?: string
-  blood_group?: string
-  profession?: string
-  mobile_no?: string
-  email?: string
-  relationship_type: string
-  is_head: boolean
   familyId: string
+  memberNo?: string
+  firstName: string
+  lastName?: string
+  fatherName?: string
+  motherName?: string
+  gender?: string
+  maritalStatus?: string
+  dateOfBirth?: string
+  dateOfBaptism?: string
+  dateOfConfirmation?: string
+  dateOfMarriage?: string
+  bloodGroup?: string
+  profession?: string
+  mobileNo?: string
+  aadhaarNumber?: string
+  email?: string
+  relationshipType?: string
+  isHead: boolean
+  createdAt?: string
+  updatedAt?: string
+}
+
+export type CelebrationFeedType = 'birthdays' | 'anniversaries'
+
+export interface CelebrationFeedItem {
+  id: string
+  name: string
+  familyName: string
+  familyCode: string
+  eventDateLabel: string
+  eventDay: number
+  mobile: string
+  email: string
+  actionPersonId: string
+  actionFamilyId: string
+}
+
+export interface CelebrationsDto {
+  month: number
+  monthLabel: string
+  birthdaysCount: number
+  anniversariesCount: number
+  birthdays: CelebrationFeedItem[]
+  anniversaries: CelebrationFeedItem[]
 }

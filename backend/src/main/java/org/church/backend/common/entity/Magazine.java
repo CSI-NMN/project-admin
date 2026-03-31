@@ -24,15 +24,15 @@ public class Magazine {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "\"createdAt\"", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "month", nullable = false)
+    @Column(name = "\"month\"", nullable = false)
     private Integer month;
 
-    @Column(name = "year", nullable = false)
+    @Column(name = "\"year\"", nullable = false)
     private Integer year;
 
-    @Column(name = "file_url", nullable = false, length = 500)
+    @Column(name = "\"fileUrl\"", nullable = false, length = 500)
     private String fileUrl;
 }

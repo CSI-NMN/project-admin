@@ -29,28 +29,28 @@ public class Subscription {
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "family_id", nullable = false)
+    @JoinColumn(name = "\"familyId\"", nullable = false)
     private Family family;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "financial_year_id", nullable = false)
+    @JoinColumn(name = "\"financialYearId\"", nullable = false)
     private FinancialYear financialYear;
 
-    @Column(name = "santha_amount", nullable = false, precision = 12, scale = 2)
+    @Column(name = "\"santhaAmount\"", nullable = false, precision = 12, scale = 2)
     private BigDecimal santhaAmount = BigDecimal.ZERO;
 
-    @Column(name = "ministry_amount", nullable = false, precision = 12, scale = 2)
+    @Column(name = "\"ministryAmount\"", nullable = false, precision = 12, scale = 2)
     private BigDecimal ministryAmount = BigDecimal.ZERO;
 
-    @Column(name = "main_amount", nullable = false, precision = 12, scale = 2)
+    @Column(name = "\"mainAmount\"", nullable = false, precision = 12, scale = 2)
     private BigDecimal mainAmount = BigDecimal.ZERO;
 
-    @Column(name = "total_amount", nullable = false, precision = 12, scale = 2)
+    @Column(name = "\"totalAmount\"", nullable = false, precision = 12, scale = 2)
     private BigDecimal totalAmount = BigDecimal.ZERO;
 
-    @Column(nullable = false, length = 20)
+    @Column(name = "\"status\"", nullable = false, length = 20)
     private String status = "DRAFT";
 
-    @Column(name = "last_saved_at")
+    @Column(name = "\"lastSavedAt\"")
     private LocalDateTime lastSavedAt;
 }

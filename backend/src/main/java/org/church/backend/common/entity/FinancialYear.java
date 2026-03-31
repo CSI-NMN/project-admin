@@ -24,15 +24,15 @@ public class FinancialYear {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "year_label", nullable = false, unique = true, length = 20)
+    @Column(name = "\"yearLabel\"", nullable = false, unique = true, length = 20)
     private String yearLabel;
 
-    @Column(name = "start_date", nullable = false)
+    @Column(name = "\"startDate\"", nullable = false)
     private LocalDate startDate;
 
-    @Column(name = "end_date", nullable = false)
+    @Column(name = "\"endDate\"", nullable = false)
     private LocalDate endDate;
 
-    @Column(nullable = false)
+    @Column(name = "\"active\"", nullable = false)
     private Boolean active = true;
 }

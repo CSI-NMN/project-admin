@@ -1,9 +1,17 @@
 package org.church.backend.service;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
+import java.time.LocalDate;
+import java.time.format.TextStyle;
 
 import org.church.backend.common.RepositoryService.IRepositoryService;
 import org.church.backend.common.entity.Family;
@@ -17,6 +25,9 @@ import org.church.backend.dto.FamilyCreateRequest;
 import org.church.backend.dto.FamilyFilter;
 import org.church.backend.dto.FamilyResponse;
 import org.church.backend.dto.FamilyUpdateRequest;
+import org.church.backend.dto.CelebrationFeedItemResponse;
+import org.church.backend.dto.CelebrationsResponse;
+import org.church.backend.dto.MovePersonRequest;
 import org.church.backend.dto.PersonCreateRequest;
 import org.church.backend.dto.PersonFilter;
 import org.church.backend.dto.PersonResponse;
@@ -44,7 +55,8 @@ public class RecordsService implements IRecordsService {
     private static final int MAX_TOP = 200;
 
     private static final Set<String> ALLOWED_FAMILY_ORDER_FIELDS = Set.of(
-            "id", "familyCode", "familyName", "area", "subscriptionId", "createdAt", "updatedAt");
+            "id", "familyCode", "familyName", "address1", "area", "address2", "pincode", "city", "state",
+            "familyHeadId", "createdAt", "updatedAt");
 
     private static final Set<String> ALLOWED_PERSON_ORDER_FIELDS = Set.of(
             "id", "memberNo", "firstName", "lastName", "gender", "relationshipType", "createdAt", "updatedAt");
@@ -76,12 +88,26 @@ public class RecordsService implements IRecordsService {
 
     @Override
     public FamilyResponse createFamily(FamilyCreateRequest request) {
-        String code = request.familyCode().trim();
+        String code = resolveFamilyCode(request.familyCode());
         if (repositoryService.exists(Family.class, hasFamilyCode(code))) {
             throw new IllegalArgumentException("Family code already exists: " + code);
         }
 
-        Family created = repositoryService.insert(FamilyMapper.toEntity(request));
+        List<PersonCreateRequest> requestedMembers = request.members() == null ? List.of() : request.members();
+        validateCreateMembers(requestedMembers);
+
+        Family family = FamilyMapper.toEntity(request);
+        family.setFamilyCode(code);
+        Family created = repositoryService.insert(family);
+
+        for (PersonCreateRequest memberRequest : requestedMembers) {
+            validateUniqueAadhaarNumber(memberRequest.aadhaarNumber(), null);
+            Person person = PersonMapper.toEntity(memberRequest);
+            person.setFamily(created);
+            repositoryService.insert(person);
+        }
+
+        refreshFamilyHeadId(created.getId());
         return toFamilyResponseWithMembers(created);
     }
 
@@ -111,14 +137,14 @@ public class RecordsService implements IRecordsService {
     @Transactional(readOnly = true)
     public ODataCollectionResponse<FamilyResponse> search(
             UUID familyId,
-            String subscriptionId,
+            UUID familyHeadId,
             String memberName,
             String phoneNumber,
             String aadhaarNumber,
             ODataQueryOptions queryOptions) {
         Specification<Family> specification = buildSearchSpecification(
                 familyId,
-                subscriptionId,
+                familyHeadId,
                 memberName,
                 phoneNumber,
                 aadhaarNumber);
@@ -132,6 +158,42 @@ public class RecordsService implements IRecordsService {
 
         Long count = queryOptions.includeCount() ? repositoryService.count(Family.class, specification) : null;
         return new ODataCollectionResponse<>(values, count);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CelebrationsResponse getCelebrations(Integer month) {
+        int resolvedMonth = resolveMonth(month);
+        String monthLabel = monthName(resolvedMonth);
+
+        List<CelebrationFeedItemResponse> birthdays = new ArrayList<>();
+        List<CelebrationFeedItemResponse> anniversaries = new ArrayList<>();
+
+        List<Family> families = repositoryService.findAll(Family.class, null, Sort.by(Sort.Direction.ASC, "familyName"));
+        for (Family family : families) {
+            List<Person> members = repositoryService.findAll(
+                    Person.class,
+                    belongsToFamily(family.getId()),
+                    Sort.by(Sort.Direction.ASC, "createdAt"));
+
+            addBirthdayItems(birthdays, family, members, resolvedMonth);
+            addAnniversaryItems(anniversaries, family, members, resolvedMonth);
+        }
+
+        birthdays.sort(Comparator
+                .comparingInt(CelebrationFeedItemResponse::eventDay)
+                .thenComparing(CelebrationFeedItemResponse::name, String.CASE_INSENSITIVE_ORDER));
+        anniversaries.sort(Comparator
+                .comparingInt(CelebrationFeedItemResponse::eventDay)
+                .thenComparing(CelebrationFeedItemResponse::name, String.CASE_INSENSITIVE_ORDER));
+
+        return new CelebrationsResponse(
+                resolvedMonth,
+                monthLabel,
+                birthdays.size(),
+                anniversaries.size(),
+                birthdays,
+                anniversaries);
     }
 
     @Override
@@ -178,6 +240,7 @@ public class RecordsService implements IRecordsService {
         }
 
         Person created = repositoryService.insert(person);
+        refreshFamilyHeadId(familyId);
         return PersonMapper.toResponse(created);
     }
 
@@ -195,6 +258,7 @@ public class RecordsService implements IRecordsService {
         }
 
         Person updated = repositoryService.update(person);
+        refreshFamilyHeadId(familyId);
         return PersonMapper.toResponse(updated);
     }
 
@@ -204,6 +268,24 @@ public class RecordsService implements IRecordsService {
         Person person = repositoryService.getRequiredById(Person.class, personId, "Person");
         ensurePersonBelongsToFamily(person, familyId);
         repositoryService.delete(person);
+        refreshFamilyHeadId(familyId);
+    }
+
+    @Override
+    public PersonResponse moveFamilyMember(UUID personId, MovePersonRequest request) {
+        Person person = repositoryService.getRequiredById(Person.class, personId, "Person");
+        UUID sourceFamilyId = person.getFamily().getId();
+        Family targetFamily = repositoryService.getRequiredById(Family.class, request.targetFamilyId(), "Family");
+
+        person.setFamily(targetFamily);
+        if (Boolean.TRUE.equals(person.getIsHead())) {
+            clearOtherHeads(targetFamily.getId(), person.getId());
+        }
+
+        Person updated = repositoryService.update(person);
+        refreshFamilyHeadId(sourceFamilyId);
+        refreshFamilyHeadId(targetFamily.getId());
+        return PersonMapper.toResponse(updated);
     }
 
     private FamilyResponse toFamilyResponseWithMembers(Family family) {
@@ -265,8 +347,15 @@ public class RecordsService implements IRecordsService {
 
             addContainsPredicate(predicates, root.get("familyCode"), filter.familyCode(), cb);
             addContainsPredicate(predicates, root.get("familyName"), filter.familyName(), cb);
+            addContainsPredicate(predicates, root.get("address1"), filter.address1(), cb);
             addContainsPredicate(predicates, root.get("area"), filter.area(), cb);
-            addContainsPredicate(predicates, root.get("subscriptionId"), filter.subscriptionId(), cb);
+            addContainsPredicate(predicates, root.get("address2"), filter.address2(), cb);
+            addContainsPredicate(predicates, root.get("pincode"), filter.pincode(), cb);
+            addContainsPredicate(predicates, root.get("city"), filter.city(), cb);
+            addContainsPredicate(predicates, root.get("state"), filter.state(), cb);
+            if (filter.familyHeadId() != null) {
+                predicates.add(cb.equal(root.get("familyHeadId"), filter.familyHeadId()));
+            }
 
             return predicates.isEmpty() ? cb.conjunction() : cb.and(predicates.toArray(new Predicate[0]));
         };
@@ -355,21 +444,19 @@ public class RecordsService implements IRecordsService {
 
     private Specification<Family> buildSearchSpecification(
             UUID familyId,
-            String subscriptionId,
+            UUID familyHeadId,
             String memberName,
             String phoneNumber,
             String aadhaarNumber) {
         return (root, query, cb) -> {
-            List<Predicate> predicates = new ArrayList<>();
+            List<Predicate> searchPredicates = new ArrayList<>();
 
             if (familyId != null) {
-                predicates.add(cb.equal(root.get("id"), familyId));
+                searchPredicates.add(cb.equal(root.get("id"), familyId));
             }
 
-            if (hasText(subscriptionId)) {
-                predicates.add(cb.like(
-                        cb.lower(root.get("subscriptionId")),
-                        "%" + subscriptionId.trim().toLowerCase() + "%"));
+            if (familyHeadId != null) {
+                searchPredicates.add(cb.equal(root.get("familyHeadId"), familyHeadId));
             }
 
             boolean personSearch = hasText(memberName) || hasText(phoneNumber) || hasText(aadhaarNumber);
@@ -381,28 +468,195 @@ public class RecordsService implements IRecordsService {
                     String term = "%" + memberName.trim().toLowerCase() + "%";
                     Predicate firstName = cb.like(cb.lower(memberJoin.get("firstName")), term);
                     Predicate lastName = cb.like(cb.lower(memberJoin.get("lastName")), term);
-                    predicates.add(cb.or(firstName, lastName));
+                    searchPredicates.add(cb.or(firstName, lastName));
                 }
 
                 if (hasText(phoneNumber)) {
-                    predicates.add(cb.like(
+                    searchPredicates.add(cb.like(
                             cb.lower(memberJoin.get("mobileNo")),
                             "%" + phoneNumber.trim().toLowerCase() + "%"));
                 }
 
                 if (hasText(aadhaarNumber)) {
-                    predicates.add(cb.equal(
+                    searchPredicates.add(cb.equal(
                             cb.lower(memberJoin.get("aadhaarNumber")),
                             aadhaarNumber.trim().toLowerCase()));
                 }
             }
 
-            return predicates.isEmpty() ? cb.conjunction() : cb.and(predicates.toArray(new Predicate[0]));
+            return searchPredicates.isEmpty() ? cb.conjunction() : cb.or(searchPredicates.toArray(new Predicate[0]));
         };
+    }
+
+    private int resolveMonth(Integer month) {
+        int resolved = month == null ? LocalDate.now().getMonthValue() : month;
+        if (resolved < 1 || resolved > 12) {
+            throw new IllegalArgumentException("month must be between 1 and 12");
+        }
+        return resolved;
+    }
+
+    private String monthName(int month) {
+        return java.time.Month.of(month).getDisplayName(TextStyle.FULL, Locale.ENGLISH);
+    }
+
+    private void addBirthdayItems(
+            List<CelebrationFeedItemResponse> target,
+            Family family,
+            List<Person> members,
+            int month) {
+        for (Person person : members) {
+            LocalDate date = person.getDateOfBirth();
+            if (date == null || date.getMonthValue() != month) {
+                continue;
+            }
+
+            target.add(new CelebrationFeedItemResponse(
+                    person.getId() + "-birthday",
+                    "birthday",
+                    buildPersonFullName(person),
+                    family.getFamilyName(),
+                    family.getFamilyCode(),
+                    formatCelebrationDateLabel(date),
+                    date.getDayOfMonth(),
+                    person.getMobileNo(),
+                    person.getEmail(),
+                    person.getId(),
+                    family.getId()));
+        }
+    }
+
+    private void addAnniversaryItems(
+            List<CelebrationFeedItemResponse> target,
+            Family family,
+            List<Person> members,
+            int month) {
+        Map<LocalDate, List<Person>> groupedByMarriageDate = new LinkedHashMap<>();
+        for (Person person : members) {
+            LocalDate date = person.getDateOfMarriage();
+            if (date == null || date.getMonthValue() != month) {
+                continue;
+            }
+            groupedByMarriageDate.computeIfAbsent(date, ignored -> new ArrayList<>()).add(person);
+        }
+
+        for (Map.Entry<LocalDate, List<Person>> entry : groupedByMarriageDate.entrySet()) {
+            LocalDate date = entry.getKey();
+            List<Person> group = new ArrayList<>(entry.getValue());
+            group.sort(this::compareAnniversaryGroupPeople);
+
+            Person primaryPerson = group.get(0);
+            String displayName = group.size() > 1
+                    ? buildHonorificName(group.get(0)) + " & " + buildHonorificName(group.get(1))
+                    : buildHonorificName(primaryPerson);
+
+            target.add(new CelebrationFeedItemResponse(
+                    primaryPerson.getId() + "-anniversary",
+                    "anniversary",
+                    displayName,
+                    family.getFamilyName(),
+                    family.getFamilyCode(),
+                    formatCelebrationDateLabel(date),
+                    date.getDayOfMonth(),
+                    primaryPerson.getMobileNo(),
+                    primaryPerson.getEmail(),
+                    primaryPerson.getId(),
+                    family.getId()));
+        }
+    }
+
+    private int compareAnniversaryGroupPeople(Person left, Person right) {
+        boolean leftHead = Boolean.TRUE.equals(left.getIsHead());
+        boolean rightHead = Boolean.TRUE.equals(right.getIsHead());
+        if (leftHead != rightHead) {
+            return leftHead ? -1 : 1;
+        }
+
+        boolean leftSpouse = "spouse".equalsIgnoreCase(left.getRelationshipType());
+        boolean rightSpouse = "spouse".equalsIgnoreCase(right.getRelationshipType());
+        if (leftSpouse && !rightSpouse) {
+            return 1;
+        }
+        if (rightSpouse && !leftSpouse) {
+            return -1;
+        }
+
+        return buildPersonFullName(left).compareToIgnoreCase(buildPersonFullName(right));
+    }
+
+    private String buildHonorificName(Person person) {
+        String name = buildPersonFullName(person);
+        String gender = person.getGender() == null ? "" : person.getGender().trim().toLowerCase(Locale.ENGLISH);
+
+        if ("male".equals(gender)) {
+            return "Mr " + name;
+        }
+        if ("female".equals(gender)) {
+            return "Mrs " + name;
+        }
+        return name;
+    }
+
+    private String buildPersonFullName(Person person) {
+        String firstName = person.getFirstName() == null ? "" : person.getFirstName().trim();
+        String lastName = person.getLastName() == null ? "" : person.getLastName().trim();
+        String fullName = (firstName + " " + lastName).trim();
+        return fullName.isEmpty() ? firstName : fullName;
+    }
+
+    private String formatCelebrationDateLabel(LocalDate date) {
+        return String.format("%02d %s", date.getDayOfMonth(), monthName(date.getMonthValue()));
     }
 
     private boolean hasText(String value) {
         return value != null && !value.isBlank();
+    }
+
+    private void refreshFamilyHeadId(UUID familyId) {
+        Family family = repositoryService.getRequiredById(Family.class, familyId, "Family");
+        List<Person> heads = repositoryService.findAll(Person.class, isHeadInFamily(familyId), Sort.unsorted());
+        UUID resolvedHeadId = heads.isEmpty() ? null : heads.get(0).getId();
+        family.setFamilyHeadId(resolvedHeadId);
+        repositoryService.update(family);
+    }
+
+    private void validateCreateMembers(List<PersonCreateRequest> requestedMembers) {
+        long headCount = requestedMembers.stream()
+                .filter(member -> Boolean.TRUE.equals(member.isHead()))
+                .count();
+        if (headCount > 1) {
+            throw new IllegalArgumentException("Only one person can be marked as family head");
+        }
+
+        Set<String> seenAadhaar = new HashSet<>();
+        for (PersonCreateRequest member : requestedMembers) {
+            if (!hasText(member.aadhaarNumber())) {
+                continue;
+            }
+
+            String normalized = member.aadhaarNumber().trim().toLowerCase();
+            if (!seenAadhaar.add(normalized)) {
+                throw new IllegalArgumentException("Duplicate Aadhaar number in request: " + member.aadhaarNumber().trim());
+            }
+        }
+    }
+
+    private String resolveFamilyCode(String requestedCode) {
+        String normalized = requestedCode == null ? "" : requestedCode.trim();
+        if (hasText(normalized)) {
+            return normalized;
+        }
+        return generateFamilyCode();
+    }
+
+    private String generateFamilyCode() {
+        for (int attempt = 0; attempt < 100; attempt++) {
+            String candidate = "FAM" + String.format("%06d", ThreadLocalRandom.current().nextInt(1_000_000));
+            if (!repositoryService.exists(Family.class, hasFamilyCode(candidate))) {
+                return candidate;
+            }
+        }
+        throw new IllegalStateException("Unable to generate a unique family code");
     }
 
     private Pageable toPageable(ODataQueryOptions queryOptions, String defaultSortField, Set<String> allowedOrderFields) {

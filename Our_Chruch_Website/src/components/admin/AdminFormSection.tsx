@@ -69,10 +69,10 @@ export default function AdminFormSection({
                         className="admin-search-result-card"
                       >
                         <span className="admin-search-result-name">
-                          {person.first_name} {person.last_name}
+                          {person.firstName} {person.lastName}
                         </span>
                         <span className="admin-search-result-meta">
-                          {person.subscriptionCardNo} | {person.mobile_no || 'No mobile'} |{' '}
+                          {person.memberNo} | {person.mobileNo || 'No mobile'} |{' '}
                           {person.email || 'No email'}
                         </span>
                       </button>
@@ -88,12 +88,12 @@ export default function AdminFormSection({
               <div className="admin-selected-grid">
                 <div>
                   <p className="admin-field-label">Member ID</p>
-                  <p className="admin-field-value">{selectedPerson.subscriptionCardNo}</p>
+                  <p className="admin-field-value">{selectedPerson.memberNo}</p>
                 </div>
                 <div>
                   <p className="admin-field-label">Name</p>
                   <p className="admin-field-value">
-                    {selectedPerson.first_name} {selectedPerson.last_name}
+                    {selectedPerson.firstName} {selectedPerson.lastName}
                   </p>
                 </div>
                 <div>
@@ -145,3 +145,4 @@ export default function AdminFormSection({
     </>
   )
 }
+
