@@ -1,21 +1,34 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Family } from '@/types/records'
 
 interface FamilyFormProps {
   onSubmit: (data: Partial<Family>) => void
   onCancel: () => void
+  initialData?: Partial<Family>
+  isEdit?: boolean
 }
 
-export default function FamilyForm({ onSubmit, onCancel }: FamilyFormProps) {
-  const [formData, setFormData] = useState<Partial<Family>>({
-    family_code: '',
-    family_name: '',
-    residential_address: '',
-    office_address: '',
-    area: '',
-  })
+const getInitialState = (initialData?: Partial<Family>): Partial<Family> => ({
+  family_code: initialData?.family_code || '',
+  family_name: initialData?.family_name || '',
+  residential_address: initialData?.residential_address || '',
+  office_address: initialData?.office_address || '',
+  area: initialData?.area || '',
+})
+
+export default function FamilyForm({
+  onSubmit,
+  onCancel,
+  initialData,
+  isEdit = false,
+}: FamilyFormProps) {
+  const [formData, setFormData] = useState<Partial<Family>>(getInitialState(initialData))
+
+  useEffect(() => {
+    setFormData(getInitialState(initialData))
+  }, [initialData])
 
   const handleChange = (field: keyof Family, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -28,7 +41,9 @@ export default function FamilyForm({ onSubmit, onCancel }: FamilyFormProps) {
 
   return (
     <div className="app-card p-6">
-      <h2 className="text-xl font-bold text-gray-900 mb-6">Create New Family</h2>
+      <h2 className="text-xl font-bold text-gray-900 mb-6">
+        {isEdit ? 'Edit Family Details' : 'Create New Family'}
+      </h2>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="app-form-grid">
@@ -87,7 +102,7 @@ export default function FamilyForm({ onSubmit, onCancel }: FamilyFormProps) {
             Cancel
           </button>
           <button type="submit" className="app-btn-primary">
-            Create Family
+            {isEdit ? 'Save Family' : 'Create Family'}
           </button>
         </div>
       </form>

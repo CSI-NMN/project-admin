@@ -1,6 +1,6 @@
 .app-page {
   min-height: 100vh;
-  background: #f2f2f2;
+  background: #fbfaf7;
 }
 
 .app-shell {
@@ -29,6 +29,12 @@
   background: #d85f00;
 }
 
+.app-btn-primary:disabled {
+  background: #9ca3af;
+  color: #f3f4f6;
+  cursor: not-allowed;
+}
+
 .app-btn-secondary {
   background: #ffffff;
   border: 2px solid #9ca3af;
@@ -41,6 +47,13 @@
 
 .app-btn-secondary:hover {
   background: #f9fafb;
+}
+
+.app-btn-secondary:disabled {
+  background: #e5e7eb;
+  border-color: #d1d5db;
+  color: #9ca3af;
+  cursor: not-allowed;
 }
 
 .app-back-link {
@@ -134,6 +147,98 @@
   color: #374151;
 }
 
+.app-page-title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  line-height: 2.25rem;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.app-delete-icon-image {
+  width: 1.2rem;
+  height: 1.2rem;
+  opacity: 0.72;
+}
+
+.app-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-shrink: 0;
+  background: #fbfaf7;
+  border: 2px solid #3f3f46;
+  color: #111827;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.125rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.app-btn-outline:hover {
+  background: #ffffff;
+  border-color: #f06c00;
+  color: #f06c00;
+}
+
+.records-table-scroll,
+.celebrations-table-scroll,
+.admin-table-scroll {
+  overflow-x: auto;
+}
+
+.records-table,
+.celebrations-table,
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.records-table-head-row,
+.celebrations-table-head-row,
+.admin-table-head-row {
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.records-table-th,
+.celebrations-table-th,
+.admin-table-th {
+  text-align: left;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.records-table-row,
+.celebrations-table-row,
+.admin-table-row {
+  border-bottom: 1px solid #e5e7eb;
+  transition: background-color 0.2s ease;
+  background: #ffffff;
+}
+
+.records-table-row:hover,
+.celebrations-table-row:hover,
+.admin-table-row:hover {
+  background: #fafafa;
+}
+
+.records-table-td,
+.celebrations-table-td,
+.admin-table-td {
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.records-table-td-strong,
+.celebrations-table-td-strong,
+.admin-table-td-strong {
+  color: #111827;
+  font-weight: 600;
+}
+
 /* Navbar V2 */
 .app-navbar {
   position: fixed;
@@ -185,7 +290,7 @@
 }
 
 .app-navbar-tab-v2 {
-  font-weight: 700;
+  font-weight: 700; 
   font-size: 2.0 rem;
   color: #4b5563;
   padding: 0.95rem 0.2rem 0.8rem;
@@ -218,343 +323,6 @@
   height: 1rem;
 }
 
-/* Records */
-.records-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 2rem;
-}
-
-.records-title {
-  font-size: 1.875rem;
-  font-weight: 700;
-  line-height: 2.25rem;
-  color: #111827;
-  margin-bottom: 0.5rem;
-}
-
-.records-subtitle {
-  font-size: 0.875rem;
-  color: #4b5563;
-}
-
-.records-search-card {
-  margin-bottom: 1.5rem;
-  padding: 1.5rem;
-}
-
-.records-section-title {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #111827;
-  margin-bottom: 0.5rem;
-}
-
-.records-search-help {
-  color: #4b5563;
-  font-size: 0.875rem;
-  margin-bottom: 1rem;
-}
-
-.records-search-wrap {
-  position: relative;
-}
-
-.records-search-icon {
-  position: absolute;
-  left: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #6b7280;
-}
-
-.records-search-input {
-  width: 100%;
-  border: 2px solid #f06c00;
-  border-radius: 0.25rem;
-  padding: 0.75rem 3rem;
-  color: #111827;
-}
-
-.records-search-input::placeholder {
-  color: #6b7280;
-}
-
-.records-search-input:focus {
-  outline: none;
-  border-color: #d85f00;
-}
-
-.records-search-clear {
-  position: absolute;
-  right: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #6b7280;
-  font-size: 1.25rem;
-}
-
-.records-search-clear:hover {
-  color: #374151;
-}
-
-.records-search-status {
-  color: #4b5563;
-  font-size: 0.875rem;
-  margin-top: 1rem;
-}
-
-.records-search-status-strong {
-  font-weight: 500;
-}
-
-.records-result-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.records-result-item {
-  width: 100%;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
-  padding: 1rem;
-  text-align: left;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.records-result-item:hover {
-  background: #fffbeb;
-  border-color: #fcd34d;
-}
-
-.records-result-name {
-  font-weight: 600;
-  color: #111827;
-}
-
-.records-result-item:hover .records-result-name {
-  color: #b45309;
-}
-
-.records-result-family {
-  font-size: 0.875rem;
-  color: #4b5563;
-}
-
-.records-result-chevron {
-  width: 1.5rem;
-  height: 1.5rem;
-  color: #9ca3af;
-  margin-left: 1rem;
-}
-
-.records-result-item:hover .records-result-chevron {
-  color: #d97706;
-}
-
-.records-family-shell {
-  overflow: hidden;
-}
-
-.records-family-header {
-  padding: 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.records-family-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1.5rem;
-}
-
-.records-field-label {
-  color: #4b5563;
-  font-size: 0.875rem;
-  font-weight: 600;
-}
-
-.records-field-value {
-  color: #111827;
-  font-weight: 600;
-}
-
-.records-field-value-lg {
-  font-size: 1.125rem;
-}
-
-.records-family-actions {
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.records-table-scroll {
-  overflow-x: auto;
-}
-
-.records-table {
-  width: 100%;
-}
-
-.records-table-head-row {
-  background: #f9fafb;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.records-table-th {
-  padding: 0.75rem 1.5rem;
-  text-align: left;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #111827;
-}
-
-.records-table-row {
-  border-bottom: 1px solid #e5e7eb;
-  transition: background-color 0.2s ease;
-}
-
-.records-table-row:hover {
-  background: #fffbeb;
-}
-
-.records-table-row-even {
-  background: #ffffff;
-}
-
-.records-table-row-odd {
-  background: #f9fafb;
-}
-
-.records-table-td {
-  padding: 1rem 1.5rem;
-  font-size: 0.875rem;
-  color: #374151;
-}
-
-.records-table-td-strong {
-  color: #111827;
-  font-weight: 500;
-}
-
-.records-action-link {
-  color: #d97706;
-  font-weight: 500;
-  transition: color 0.2s ease;
-}
-
-.records-action-link:hover {
-  color: #b45309;
-}
-
-.records-family-footer {
-  padding: 1rem 1.5rem;
-  border-top: 1px solid #e5e7eb;
-  background: #f9fafb;
-}
-
-.records-footer-action {
-  color: #d97706;
-  font-weight: 500;
-  transition: color 0.2s ease;
-}
-
-.records-footer-action:hover {
-  color: #b45309;
-}
-
-.records-modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.4);
-  padding: 0 1rem;
-}
-
-.records-modal {
-  width: 100%;
-  max-width: 28rem;
-  border-radius: 0.5rem;
-  background: #ffffff;
-  border: 1px solid #d1d5db;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-}
-
-.records-modal-header {
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.records-modal-title {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: #111827;
-}
-
-.records-modal-subtitle {
-  font-size: 0.875rem;
-  color: #4b5563;
-  margin-top: 0.25rem;
-}
-
-.records-modal-body {
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.records-modal-option {
-  width: 100%;
-  border-radius: 0.25rem;
-  border: 1px solid #d1d5db;
-  padding: 0.75rem 1rem;
-  text-align: left;
-  font-weight: 500;
-  color: #1f2937;
-  transition: background-color 0.2s ease;
-}
-
-.records-modal-option:hover {
-  background: #f9fafb;
-}
-
-.records-modal-option-active {
-  border-color: #d97706;
-  background: #fffbeb;
-  color: #b45309;
-}
-
-.records-modal-option-active:hover {
-  background: #fef3c7;
-}
-
-.records-modal-footer {
-  padding: 1rem 1.5rem;
-  border-top: 1px solid #e5e7eb;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.records-modal-cancel {
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #4b5563;
-}
-
-.records-modal-cancel:hover {
-  color: #1f2937;
-}
-
 @media (max-width: 1080px) {
   .app-navbar-template-v2 {
     min-height: auto;
@@ -585,13 +353,6 @@
 }
 
 @media (max-width: 768px) {
-  .records-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-
-  .records-family-grid,
   .app-form-grid {
     grid-template-columns: repeat(1, minmax(0, 1fr));
   }
