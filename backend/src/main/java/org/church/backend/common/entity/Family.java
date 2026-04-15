@@ -3,7 +3,6 @@ package org.church.backend.common.entity;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -25,8 +24,8 @@ import lombok.Setter;
 public class Family {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Column(name = "\"createdAt\"", updatable = false)
     private LocalDateTime createdAt;
@@ -59,7 +58,7 @@ public class Family {
     private String state;
 
     @Column(name = "\"familyHeadId\"")
-    private UUID familyHeadId;
+    private Long familyHeadId;
 
     @OneToMany(mappedBy = "family", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Person> members = new ArrayList<>();

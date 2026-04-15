@@ -6,14 +6,14 @@ interface FamilyDetailsSectionProps {
   selectedFamily: Family
   showHierarchyEditor: boolean
   selectedHierarchyPeople: Person[]
-  selectedHierarchyPersonIds: string[]
+  selectedHierarchyPersonIds: number[]
   onBackToRecords: () => void
   onEditFamily: () => void
   onEditHierarchy: () => void
   onDiscardHierarchy: () => void
   onOpenSplitModal: () => void
-  onSelectHierarchyPerson: (personId: string) => void
-  onEditPerson: (personId: string) => void
+  onSelectHierarchyPerson: (personId: number) => void
+  onEditPerson: (personId: number) => void
   onDeleteRequest: (person: Person) => void
   onAddNewRecord: () => void
 }
@@ -153,7 +153,7 @@ export default function FamilyDetailsSection({
             <thead>
               <tr className="records-table-head-row">
                 <th className="records-table-th">Name</th>
-                <th className="records-table-th">Subscription Card</th>
+                <th className="records-table-th">Subscription</th>
                 <th className="records-table-th">Relationship</th>
                 <th className="records-table-th">Mobile</th>
                 <th className="records-table-th">Email</th>
@@ -171,7 +171,7 @@ export default function FamilyDetailsSection({
                   <td className="records-table-td records-table-td-strong">
                     {person.firstName} {person.lastName}
                   </td>
-                  <td className="records-table-td">{person.memberNo}</td>
+                  <td className="records-table-td">{person.membershipName || person.memberNo || 'N/A'}</td>
                   <td className="records-table-td">{person.relationshipType}</td>
                   <td className="records-table-td">{person.mobileNo}</td>
                   <td className="records-table-td">{person.email}</td>

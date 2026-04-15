@@ -2,16 +2,14 @@ package org.church.backend.dto;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 public record PersonResponse(
-        UUID id,
-        UUID familyId,
+        Long id,
+        Long familyId,
         String memberNo,
+        String membershipName,
         String firstName,
         String lastName,
-        String fatherName,
-        String motherName,
         String gender,
         String maritalStatus,
         LocalDate dateOfBirth,

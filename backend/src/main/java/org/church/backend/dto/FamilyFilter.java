@@ -9,7 +9,7 @@ public record FamilyFilter(
         String pincode,
         String city,
         String state,
-        java.util.UUID familyHeadId
+        Long familyHeadId
 ) {
 }
 

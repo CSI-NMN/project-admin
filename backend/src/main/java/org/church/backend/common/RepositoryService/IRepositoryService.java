@@ -1,7 +1,6 @@
 package org.church.backend.common.RepositoryService;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,7 +21,7 @@ public interface IRepositoryService {
 
     <T> boolean exists(Class<T> entityClass, Specification<T> specification);
 
-    <T> T getRequiredById(Class<T> entityClass, UUID id, String entityName);
+    <T> T getRequiredById(Class<T> entityClass, Object id, String entityName);
 
     <T> T insert(T entity);
 
@@ -30,5 +29,5 @@ public interface IRepositoryService {
 
     <T> void delete(T entity);
 
-    <T> boolean existsById(Class<T> entityClass, UUID id);
+    <T> boolean existsById(Class<T> entityClass, Object id);
 }

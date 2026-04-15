@@ -11,11 +11,10 @@ import { CelebrationFeedItem, CelebrationsDto, Family, Person } from '@/types/re
 const mapPerson = (person: ApiPersonResponse): Person => ({
   id: person.id,
   familyId: person.familyId,
-  memberNo: person.memberNo || '',
+  memberNo: person.memberNo || undefined,
+  membershipName: person.membershipName || undefined,
   firstName: person.firstName || '',
   lastName: person.lastName || '',
-  fatherName: person.fatherName || undefined,
-  motherName: person.motherName || undefined,
   gender: person.gender || undefined,
   maritalStatus: person.maritalStatus || undefined,
   dateOfBirth: person.dateOfBirth || undefined,
@@ -63,11 +62,8 @@ const mapCelebrationItem = (item: ApiCelebrationFeedItem): CelebrationFeedItem =
 })
 
 const mapPersonPayload = (data: Partial<Person>) => ({
-  memberNo: data.memberNo || null,
   firstName: data.firstName || '',
   lastName: data.lastName || null,
-  fatherName: data.fatherName || null,
-  motherName: data.motherName || null,
   gender: data.gender || null,
   maritalStatus: data.maritalStatus || null,
   dateOfBirth: data.dateOfBirth || null,
@@ -81,6 +77,8 @@ const mapPersonPayload = (data: Partial<Person>) => ({
   email: data.email || null,
   relationshipType: data.relationshipType || null,
   isHead: data.isHead ?? false,
+  createSubscription: Boolean(data.createSubscription),
+  subscriptionName: data.createSubscription ? data.subscriptionName || null : null,
 })
 
 const pickDefined = <T extends Record<string, unknown>>(payload: T): Partial<T> =>
@@ -103,14 +101,13 @@ export const recordsService = {
     return (payload.value || []).map(mapFamily)
   },
 
-  async getFamilyById(familyId: string): Promise<Family> {
+  async getFamilyById(familyId: number): Promise<Family> {
     const payload = await apiRequest<ApiFamilyResponse>(`/odata/Records/${familyId}`)
     return mapFamily(payload)
   },
 
   async createFamily(data: Partial<Family>): Promise<Family> {
     const payload = {
-      familyCode: data.familyCode || null,
       familyName: data.familyName || '',
       address1: data.address1 || null,
       area: data.area || null,
@@ -129,9 +126,8 @@ export const recordsService = {
     return mapFamily(created)
   },
 
-  async updateFamily(familyId: string, data: Partial<Family>): Promise<Family> {
+  async updateFamily(familyId: number, data: Partial<Family>): Promise<Family> {
     const payload = pickDefined({
-      familyCode: data.familyCode,
       familyName: data.familyName,
       address1: data.address1 === '' ? null : data.address1,
       area: data.area === '' ? null : data.area,
@@ -149,7 +145,7 @@ export const recordsService = {
     return mapFamily(updated)
   },
 
-  async addFamilyMember(familyId: string, data: Partial<Person>): Promise<Person> {
+  async addFamilyMember(familyId: number, data: Partial<Person>): Promise<Person> {
     const payload = mapPersonPayload(data)
 
     const created = await apiRequest<ApiPersonResponse>(`/odata/Records/${familyId}/Persons`, {
@@ -160,18 +156,15 @@ export const recordsService = {
     return mapPerson(created)
   },
 
-  async getFamilyMemberById(familyId: string, personId: string): Promise<Person> {
+  async getFamilyMemberById(familyId: number, personId: number): Promise<Person> {
     const payload = await apiRequest<ApiPersonResponse>(`/odata/Records/${familyId}/Persons/${personId}`)
     return mapPerson(payload)
   },
 
-  async updateFamilyMember(familyId: string, personId: string, data: Partial<Person>): Promise<Person> {
+  async updateFamilyMember(familyId: number, personId: number, data: Partial<Person>): Promise<Person> {
     const payload = pickDefined({
-      memberNo: data.memberNo === '' ? null : data.memberNo,
       firstName: data.firstName,
       lastName: data.lastName === '' ? null : data.lastName,
-      fatherName: data.fatherName === '' ? null : data.fatherName,
-      motherName: data.motherName === '' ? null : data.motherName,
       gender: data.gender === '' ? null : data.gender,
       maritalStatus: data.maritalStatus === '' ? null : data.maritalStatus,
       dateOfBirth: data.dateOfBirth === '' ? null : data.dateOfBirth,
@@ -195,13 +188,13 @@ export const recordsService = {
     return mapPerson(updated)
   },
 
-  async deleteFamilyMember(familyId: string, personId: string): Promise<void> {
+  async deleteFamilyMember(familyId: number, personId: number): Promise<void> {
     await apiRequest<void>(`/odata/Records/${familyId}/Persons/${personId}`, {
       method: 'DELETE',
     })
   },
 
-  async moveFamilyMember(personId: string, targetFamilyId: string): Promise<Person> {
+  async moveFamilyMember(personId: number, targetFamilyId: number): Promise<Person> {
     const updated = await apiRequest<ApiPersonResponse>(`/odata/Records/Persons/${personId}/move`, {
       method: 'PATCH',
       body: { targetFamilyId },

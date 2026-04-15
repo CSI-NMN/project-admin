@@ -1,9 +1,7 @@
 package org.church.backend.dto;
 
-import java.util.UUID;
-
 public record PersonFilter(
-        UUID familyId,
+        Long familyId,
         String memberNo,
         String firstName,
         String lastName,

@@ -55,7 +55,7 @@ export default function AdminFormSection({
                 value={searchQuery}
                 onChange={event => onSearchChange(event.target.value)}
                 className="app-input admin-search-input"
-                placeholder="Search by name, subscription ID, phone number, or email"
+                placeholder="Search by name, subscription name, subscription ID, phone number, or email"
               />
 
               {searchQuery.trim() && (
@@ -72,7 +72,7 @@ export default function AdminFormSection({
                           {person.firstName} {person.lastName}
                         </span>
                         <span className="admin-search-result-meta">
-                          {person.memberNo} | {person.mobileNo || 'No mobile'} |{' '}
+                          {person.membershipName || person.memberNo || 'No subscription'} | {person.mobileNo || 'No mobile'} |{' '}
                           {person.email || 'No email'}
                         </span>
                       </button>
@@ -87,8 +87,10 @@ export default function AdminFormSection({
             <div className="admin-selected-person">
               <div className="admin-selected-grid">
                 <div>
-                  <p className="admin-field-label">Member ID</p>
-                  <p className="admin-field-value">{selectedPerson.memberNo}</p>
+                  <p className="admin-field-label">Subscription</p>
+                  <p className="admin-field-value">
+                    {selectedPerson.membershipName || selectedPerson.memberNo || 'N/A'}
+                  </p>
                 </div>
                 <div>
                   <p className="admin-field-label">Name</p>

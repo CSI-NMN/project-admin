@@ -8,13 +8,13 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.time.LocalDate;
 import java.time.format.TextStyle;
 
 import org.church.backend.common.RepositoryService.IRepositoryService;
 import org.church.backend.common.entity.Family;
+import org.church.backend.common.entity.Membership;
 import org.church.backend.common.entity.Person;
 import org.church.backend.common.odata.ODataCollectionResponse;
 import org.church.backend.common.odata.ODataQueryOptions;
@@ -59,7 +59,7 @@ public class RecordsService implements IRecordsService {
             "familyHeadId", "createdAt", "updatedAt");
 
     private static final Set<String> ALLOWED_PERSON_ORDER_FIELDS = Set.of(
-            "id", "memberNo", "firstName", "lastName", "gender", "relationshipType", "createdAt", "updatedAt");
+            "id", "firstName", "lastName", "gender", "relationshipType", "createdAt", "updatedAt");
 
     private final IRepositoryService repositoryService;
 
@@ -81,28 +81,30 @@ public class RecordsService implements IRecordsService {
 
     @Override
     @Transactional(readOnly = true)
-    public FamilyResponse getFamilyById(UUID familyId) {
+    public FamilyResponse getFamilyById(Long familyId) {
         Family family = repositoryService.getRequiredById(Family.class, familyId, "Family");
         return toFamilyResponseWithMembers(family);
     }
 
     @Override
     public FamilyResponse createFamily(FamilyCreateRequest request) {
-        String code = resolveFamilyCode(request.familyCode());
-        if (repositoryService.exists(Family.class, hasFamilyCode(code))) {
-            throw new IllegalArgumentException("Family code already exists: " + code);
-        }
-
         List<PersonCreateRequest> requestedMembers = request.members() == null ? List.of() : request.members();
         validateCreateMembers(requestedMembers);
 
         Family family = FamilyMapper.toEntity(request);
-        family.setFamilyCode(code);
+        family.setFamilyCode(generateFamilyCode());
         Family created = repositoryService.insert(family);
 
+        boolean firstMember = true;
         for (PersonCreateRequest memberRequest : requestedMembers) {
             validateUniqueAadhaarNumber(memberRequest.aadhaarNumber(), null);
             Person person = PersonMapper.toEntity(memberRequest);
+            person.setMembership(resolveMembership(memberRequest));
+            person.setIsHead(firstMember);
+            if (firstMember) {
+                person.setRelationshipType("Head");
+            }
+            firstMember = false;
             person.setFamily(created);
             repositoryService.insert(person);
         }
@@ -112,15 +114,8 @@ public class RecordsService implements IRecordsService {
     }
 
     @Override
-    public FamilyResponse updateFamily(UUID familyId, FamilyUpdateRequest request) {
+    public FamilyResponse updateFamily(Long familyId, FamilyUpdateRequest request) {
         Family family = repositoryService.getRequiredById(Family.class, familyId, "Family");
-
-        if (request.familyCode() != null) {
-            String code = request.familyCode().trim();
-            if (repositoryService.exists(Family.class, hasFamilyCodeAndIdNot(code, familyId))) {
-                throw new IllegalArgumentException("Family code already exists: " + code);
-            }
-        }
 
         FamilyMapper.applyUpdate(family, request);
         Family updated = repositoryService.update(family);
@@ -128,7 +123,7 @@ public class RecordsService implements IRecordsService {
     }
 
     @Override
-    public void deleteFamily(UUID familyId) {
+    public void deleteFamily(Long familyId) {
         Family family = repositoryService.getRequiredById(Family.class, familyId, "Family");
         repositoryService.delete(family);
     }
@@ -136,8 +131,10 @@ public class RecordsService implements IRecordsService {
     @Override
     @Transactional(readOnly = true)
     public ODataCollectionResponse<FamilyResponse> search(
-            UUID familyId,
-            UUID familyHeadId,
+            Long familyId,
+            Long familyHeadId,
+            String familyCode,
+            String memberNo,
             String memberName,
             String phoneNumber,
             String aadhaarNumber,
@@ -145,6 +142,8 @@ public class RecordsService implements IRecordsService {
         Specification<Family> specification = buildSearchSpecification(
                 familyId,
                 familyHeadId,
+                familyCode,
+                memberNo,
                 memberName,
                 phoneNumber,
                 aadhaarNumber);
@@ -199,7 +198,7 @@ public class RecordsService implements IRecordsService {
     @Override
     @Transactional(readOnly = true)
     public ODataCollectionResponse<PersonResponse> getFamilyMembers(
-            UUID familyId,
+            Long familyId,
             PersonFilter filter,
             ODataQueryOptions queryOptions) {
         ensureFamilyExists(familyId);
@@ -220,7 +219,7 @@ public class RecordsService implements IRecordsService {
 
     @Override
     @Transactional(readOnly = true)
-    public PersonResponse getFamilyMemberById(UUID familyId, UUID personId) {
+    public PersonResponse getFamilyMemberById(Long familyId, Long personId) {
         ensureFamilyExists(familyId);
         Person person = repositoryService.getRequiredById(Person.class, personId, "Person");
         ensurePersonBelongsToFamily(person, familyId);
@@ -228,14 +227,20 @@ public class RecordsService implements IRecordsService {
     }
 
     @Override
-    public PersonResponse addFamilyMember(UUID familyId, PersonCreateRequest request) {
+    public PersonResponse addFamilyMember(Long familyId, PersonCreateRequest request) {
         Family family = repositoryService.getRequiredById(Family.class, familyId, "Family");
         validateUniqueAadhaarNumber(request.aadhaarNumber(), null);
 
         Person person = PersonMapper.toEntity(request);
+        person.setMembership(resolveMembership(request));
         person.setFamily(family);
+        boolean firstMemberInFamily = !repositoryService.exists(Person.class, belongsToFamily(familyId));
+        if (firstMemberInFamily) {
+            person.setIsHead(true);
+            person.setRelationshipType("Head");
+        }
 
-        if (Boolean.TRUE.equals(person.getIsHead())) {
+        if (!firstMemberInFamily && Boolean.TRUE.equals(person.getIsHead())) {
             clearOtherHeads(family.getId(), null);
         }
 
@@ -245,7 +250,7 @@ public class RecordsService implements IRecordsService {
     }
 
     @Override
-    public PersonResponse updateFamilyMember(UUID familyId, UUID personId, PersonUpdateRequest request) {
+    public PersonResponse updateFamilyMember(Long familyId, Long personId, PersonUpdateRequest request) {
         ensureFamilyExists(familyId);
         Person person = repositoryService.getRequiredById(Person.class, personId, "Person");
         ensurePersonBelongsToFamily(person, familyId);
@@ -263,7 +268,7 @@ public class RecordsService implements IRecordsService {
     }
 
     @Override
-    public void deleteFamilyMember(UUID familyId, UUID personId) {
+    public void deleteFamilyMember(Long familyId, Long personId) {
         ensureFamilyExists(familyId);
         Person person = repositoryService.getRequiredById(Person.class, personId, "Person");
         ensurePersonBelongsToFamily(person, familyId);
@@ -272,9 +277,9 @@ public class RecordsService implements IRecordsService {
     }
 
     @Override
-    public PersonResponse moveFamilyMember(UUID personId, MovePersonRequest request) {
+    public PersonResponse moveFamilyMember(Long personId, MovePersonRequest request) {
         Person person = repositoryService.getRequiredById(Person.class, personId, "Person");
-        UUID sourceFamilyId = person.getFamily().getId();
+        Long sourceFamilyId = person.getFamily().getId();
         Family targetFamily = repositoryService.getRequiredById(Family.class, request.targetFamilyId(), "Family");
 
         person.setFamily(targetFamily);
@@ -300,7 +305,7 @@ public class RecordsService implements IRecordsService {
         return FamilyMapper.toResponse(family, members);
     }
 
-    private void clearOtherHeads(UUID familyId, UUID currentPersonId) {
+    private void clearOtherHeads(Long familyId, Long currentPersonId) {
         List<Person> existingHeads = repositoryService.findAll(
                 Person.class,
                 isHeadInFamily(familyId),
@@ -313,19 +318,19 @@ public class RecordsService implements IRecordsService {
         }
     }
 
-    private void ensureFamilyExists(UUID familyId) {
+    private void ensureFamilyExists(Long familyId) {
         if (!repositoryService.existsById(Family.class, familyId)) {
             throw new NoSuchElementException("Family not found for id: " + familyId);
         }
     }
 
-    private void ensurePersonBelongsToFamily(Person person, UUID familyId) {
+    private void ensurePersonBelongsToFamily(Person person, Long familyId) {
         if (!person.getFamily().getId().equals(familyId)) {
             throw new NoSuchElementException("Person " + person.getId() + " does not belong to family " + familyId);
         }
     }
 
-    private PersonFilter mergeFamilyFilter(UUID familyId, PersonFilter filter) {
+    private PersonFilter mergeFamilyFilter(Long familyId, PersonFilter filter) {
         if (filter == null) {
             return new PersonFilter(familyId, null, null, null, null);
         }
@@ -373,7 +378,10 @@ public class RecordsService implements IRecordsService {
                 predicates.add(cb.equal(root.get("family").get("id"), filter.familyId()));
             }
 
-            addContainsPredicate(predicates, root.get("memberNo"), filter.memberNo(), cb);
+            if (hasText(filter.memberNo())) {
+                Join<Person, Membership> membershipJoin = root.join("membership", JoinType.LEFT);
+                predicates.add(buildMembershipSearchPredicate(membershipJoin, filter.memberNo(), cb));
+            }
             addContainsPredicate(predicates, root.get("firstName"), filter.firstName(), cb);
             addContainsPredicate(predicates, root.get("lastName"), filter.lastName(), cb);
 
@@ -401,23 +409,23 @@ public class RecordsService implements IRecordsService {
         return (root, query, cb) -> cb.equal(cb.lower(root.get("familyCode")), code.toLowerCase());
     }
 
-    private Specification<Family> hasFamilyCodeAndIdNot(String code, UUID excludedId) {
+    private Specification<Family> hasFamilyCodeAndIdNot(String code, Long excludedId) {
         return (root, query, cb) -> cb.and(
                 cb.equal(cb.lower(root.get("familyCode")), code.toLowerCase()),
                 cb.notEqual(root.get("id"), excludedId));
     }
 
-    private Specification<Person> belongsToFamily(UUID familyId) {
+    private Specification<Person> belongsToFamily(Long familyId) {
         return (root, query, cb) -> cb.equal(root.get("family").get("id"), familyId);
     }
 
-    private Specification<Person> isHeadInFamily(UUID familyId) {
+    private Specification<Person> isHeadInFamily(Long familyId) {
         return (root, query, cb) -> cb.and(
                 cb.equal(root.get("family").get("id"), familyId),
                 cb.isTrue(root.get("isHead")));
     }
 
-    private void validateUniqueAadhaarNumber(String aadhaarNumber, UUID currentPersonId) {
+    private void validateUniqueAadhaarNumber(String aadhaarNumber, Long currentPersonId) {
         if (!hasText(aadhaarNumber)) {
             return;
         }
@@ -436,15 +444,33 @@ public class RecordsService implements IRecordsService {
         return (root, query, cb) -> cb.equal(cb.lower(root.get("aadhaarNumber")), aadhaarNumber.toLowerCase());
     }
 
-    private Specification<Person> hasAadhaarNumberAndIdNot(String aadhaarNumber, UUID excludedId) {
+    private Specification<Person> hasAadhaarNumberAndIdNot(String aadhaarNumber, Long excludedId) {
         return (root, query, cb) -> cb.and(
                 cb.equal(cb.lower(root.get("aadhaarNumber")), aadhaarNumber.toLowerCase()),
                 cb.notEqual(root.get("id"), excludedId));
     }
 
+    private Predicate buildMembershipSearchPredicate(
+            Join<Person, Membership> membershipJoin,
+            String value,
+            jakarta.persistence.criteria.CriteriaBuilder cb) {
+        String normalized = value.trim().toLowerCase();
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(cb.like(cb.lower(membershipJoin.get("name")), "%" + normalized + "%"));
+
+        Long membershipId = tryParseLong(value);
+        if (membershipId != null) {
+            predicates.add(cb.equal(membershipJoin.get("id"), membershipId));
+        }
+
+        return cb.or(predicates.toArray(new Predicate[0]));
+    }
+
     private Specification<Family> buildSearchSpecification(
-            UUID familyId,
-            UUID familyHeadId,
+            Long familyId,
+            Long familyHeadId,
+            String familyCode,
+            String memberNo,
             String memberName,
             String phoneNumber,
             String aadhaarNumber) {
@@ -459,10 +485,21 @@ public class RecordsService implements IRecordsService {
                 searchPredicates.add(cb.equal(root.get("familyHeadId"), familyHeadId));
             }
 
-            boolean personSearch = hasText(memberName) || hasText(phoneNumber) || hasText(aadhaarNumber);
+            if (hasText(familyCode)) {
+                searchPredicates.add(cb.like(
+                        cb.lower(root.get("familyCode")),
+                        "%" + familyCode.trim().toLowerCase() + "%"));
+            }
+
+            boolean personSearch = hasText(memberNo) || hasText(memberName) || hasText(phoneNumber) || hasText(aadhaarNumber);
             if (personSearch) {
                 Join<Family, Person> memberJoin = root.join("members", JoinType.LEFT);
                 query.distinct(true);
+
+                if (hasText(memberNo)) {
+                    Join<Person, Membership> membershipJoin = memberJoin.join("membership", JoinType.LEFT);
+                    searchPredicates.add(buildMembershipSearchPredicate(membershipJoin, memberNo, cb));
+                }
 
                 if (hasText(memberName)) {
                     String term = "%" + memberName.trim().toLowerCase() + "%";
@@ -612,22 +649,15 @@ public class RecordsService implements IRecordsService {
         return value != null && !value.isBlank();
     }
 
-    private void refreshFamilyHeadId(UUID familyId) {
+    private void refreshFamilyHeadId(Long familyId) {
         Family family = repositoryService.getRequiredById(Family.class, familyId, "Family");
         List<Person> heads = repositoryService.findAll(Person.class, isHeadInFamily(familyId), Sort.unsorted());
-        UUID resolvedHeadId = heads.isEmpty() ? null : heads.get(0).getId();
+        Long resolvedHeadId = heads.isEmpty() ? null : heads.get(0).getId();
         family.setFamilyHeadId(resolvedHeadId);
         repositoryService.update(family);
     }
 
     private void validateCreateMembers(List<PersonCreateRequest> requestedMembers) {
-        long headCount = requestedMembers.stream()
-                .filter(member -> Boolean.TRUE.equals(member.isHead()))
-                .count();
-        if (headCount > 1) {
-            throw new IllegalArgumentException("Only one person can be marked as family head");
-        }
-
         Set<String> seenAadhaar = new HashSet<>();
         for (PersonCreateRequest member : requestedMembers) {
             if (!hasText(member.aadhaarNumber())) {
@@ -641,12 +671,14 @@ public class RecordsService implements IRecordsService {
         }
     }
 
-    private String resolveFamilyCode(String requestedCode) {
-        String normalized = requestedCode == null ? "" : requestedCode.trim();
-        if (hasText(normalized)) {
-            return normalized;
+    private Membership resolveMembership(PersonCreateRequest request) {
+        if (!Boolean.TRUE.equals(request.createSubscription())) {
+            return null;
         }
-        return generateFamilyCode();
+
+        Membership membership = new Membership();
+        membership.setName(request.subscriptionName().trim());
+        return repositoryService.insert(membership);
     }
 
     private String generateFamilyCode() {
@@ -664,6 +696,18 @@ public class RecordsService implements IRecordsService {
         int top = queryOptions.resolvedTop(DEFAULT_TOP, MAX_TOP);
         int skip = queryOptions.resolvedSkip();
         return new OffsetBasedPageRequest(skip, top, sort);
+    }
+
+    private Long tryParseLong(String value) {
+        if (!hasText(value)) {
+            return null;
+        }
+
+        try {
+            return Long.valueOf(value.trim());
+        } catch (NumberFormatException ex) {
+            return null;
+        }
     }
 }
 

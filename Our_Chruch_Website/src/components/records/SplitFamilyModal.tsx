@@ -7,13 +7,13 @@ interface SplitFamilyModalProps {
   mode: SplitModalMode
   familySearchQuery: string
   filteredTargetFamilies: Family[]
-  targetFamilyId: string
+  targetFamilyId: number | null
   canMerge: boolean
   onClose: () => void
   onCreateNewFamily: () => void
   onModeChange: (mode: SplitModalMode) => void
   onFamilySearchChange: (query: string) => void
-  onTargetFamilySelect: (familyId: string) => void
+  onTargetFamilySelect: (familyId: number) => void
   onMerge: () => void
 }
 

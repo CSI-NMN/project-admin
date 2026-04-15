@@ -6,8 +6,8 @@ interface CelebrationsFeedTableProps {
   feedType: CelebrationFeedType
   monthLabel: string
   items: CelebrationFeedItem[]
-  onEditRecord: (personId: string, familyId: string) => void
-  onDeleteRecord: (personId: string, familyId: string, displayName: string) => void
+  onEditRecord: (personId: number, familyId: number) => void
+  onDeleteRecord: (personId: number, familyId: number, displayName: string) => void
 }
 
 export default function CelebrationsFeedTable({

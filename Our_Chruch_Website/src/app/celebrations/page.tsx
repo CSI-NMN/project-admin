@@ -114,8 +114,8 @@ export default function CelebrationsPage() {
   const [selectedMonth, setSelectedMonth] = useState<number>(initialState.month)
   const [activeFeed, setActiveFeed] = useState<CelebrationFeedType>(initialState.feed)
   const [deleteCandidate, setDeleteCandidate] = useState<{
-    id: string
-    familyId: string
+    id: number
+    familyId: number
     firstName: string
     lastName?: string
   } | null>(null)
@@ -147,12 +147,12 @@ export default function CelebrationsPage() {
     downloadCelebrationsWorkbook(selectedMonthLabel, birthdaysForView, anniversariesForView)
   }
 
-  const handleEditRecord = (personId: string, familyId: string) => {
+  const handleEditRecord = (personId: number, familyId: number) => {
     persistCelebrationsState(selectedMonth, activeFeed)
     router.push(`/records/edit?familyId=${familyId}&id=${personId}&source=celebrations`)
   }
 
-  const handleDeleteRequest = (personId: string, familyId: string, displayName: string) => {
+  const handleDeleteRequest = (personId: number, familyId: number, displayName: string) => {
     const nameParts = displayName.split(' ').filter(Boolean)
     const firstName = nameParts[0] || 'Record'
     const lastName = nameParts.slice(1).join(' ')

@@ -1,7 +1,5 @@
 package org.church.backend.abstraction;
 
-import java.util.UUID;
-
 import org.church.backend.common.odata.ODataCollectionResponse;
 import org.church.backend.common.odata.ODataQueryOptions;
 import org.church.backend.dto.FamilyCreateRequest;
@@ -19,17 +17,19 @@ public interface IRecordsService {
 
     ODataCollectionResponse<FamilyResponse> getFamilies(FamilyFilter filter, ODataQueryOptions queryOptions);
 
-    FamilyResponse getFamilyById(UUID familyId);
+    FamilyResponse getFamilyById(Long familyId);
 
     FamilyResponse createFamily(FamilyCreateRequest request);
 
-    FamilyResponse updateFamily(UUID familyId, FamilyUpdateRequest request);
+    FamilyResponse updateFamily(Long familyId, FamilyUpdateRequest request);
 
-    void deleteFamily(UUID familyId);
+    void deleteFamily(Long familyId);
 
     ODataCollectionResponse<FamilyResponse> search(
-            UUID familyId,
-            UUID familyHeadId,
+            Long familyId,
+            Long familyHeadId,
+            String familyCode,
+            String memberNo,
             String memberName,
             String phoneNumber,
             String aadhaarNumber,
@@ -37,16 +37,16 @@ public interface IRecordsService {
 
     CelebrationsResponse getCelebrations(Integer month);
 
-    ODataCollectionResponse<PersonResponse> getFamilyMembers(UUID familyId, PersonFilter filter, ODataQueryOptions queryOptions);
+    ODataCollectionResponse<PersonResponse> getFamilyMembers(Long familyId, PersonFilter filter, ODataQueryOptions queryOptions);
 
-    PersonResponse getFamilyMemberById(UUID familyId, UUID personId);
+    PersonResponse getFamilyMemberById(Long familyId, Long personId);
 
-    PersonResponse addFamilyMember(UUID familyId, PersonCreateRequest request);
+    PersonResponse addFamilyMember(Long familyId, PersonCreateRequest request);
 
-    PersonResponse updateFamilyMember(UUID familyId, UUID personId, PersonUpdateRequest request);
+    PersonResponse updateFamilyMember(Long familyId, Long personId, PersonUpdateRequest request);
 
-    void deleteFamilyMember(UUID familyId, UUID personId);
+    void deleteFamilyMember(Long familyId, Long personId);
 
-    PersonResponse moveFamilyMember(UUID personId, MovePersonRequest request);
+    PersonResponse moveFamilyMember(Long personId, MovePersonRequest request);
 }
 

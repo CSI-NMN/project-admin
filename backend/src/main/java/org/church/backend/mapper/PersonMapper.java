@@ -12,48 +12,36 @@ public final class PersonMapper {
 
     public static Person toEntity(PersonCreateRequest request) {
         Person person = new Person();
-        person.setMemberNo(request.memberNo());
         person.setFirstName(request.firstName().trim());
-        person.setLastName(request.lastName());
-        person.setFatherName(request.fatherName());
-        person.setMotherName(request.motherName());
-        person.setGender(request.gender());
-        person.setMaritalStatus(request.maritalStatus());
+        person.setLastName(normalize(request.lastName()));
+        person.setGender(normalize(request.gender()));
+        person.setMaritalStatus(normalize(request.maritalStatus()));
         person.setDateOfBirth(request.dateOfBirth());
         person.setDateOfBaptism(request.dateOfBaptism());
         person.setDateOfConfirmation(request.dateOfConfirmation());
         person.setDateOfMarriage(request.dateOfMarriage());
-        person.setBloodGroup(request.bloodGroup());
-        person.setProfession(request.profession());
-        person.setMobileNo(request.mobileNo());
+        person.setBloodGroup(normalize(request.bloodGroup()));
+        person.setProfession(normalize(request.profession()));
+        person.setMobileNo(normalize(request.mobileNo()));
         person.setAadhaarNumber(normalize(request.aadhaarNumber()));
-        person.setEmail(request.email());
-        person.setRelationshipType(request.relationshipType());
+        person.setEmail(normalize(request.email()));
+        person.setRelationshipType(normalize(request.relationshipType()));
         person.setIsHead(request.isHead() == null ? false : request.isHead());
         return person;
     }
 
     public static void applyUpdate(Person person, PersonUpdateRequest request) {
-        if (request.memberNo() != null) {
-            person.setMemberNo(request.memberNo());
-        }
         if (request.firstName() != null) {
             person.setFirstName(request.firstName().trim());
         }
         if (request.lastName() != null) {
-            person.setLastName(request.lastName());
-        }
-        if (request.fatherName() != null) {
-            person.setFatherName(request.fatherName());
-        }
-        if (request.motherName() != null) {
-            person.setMotherName(request.motherName());
+            person.setLastName(normalize(request.lastName()));
         }
         if (request.gender() != null) {
-            person.setGender(request.gender());
+            person.setGender(normalize(request.gender()));
         }
         if (request.maritalStatus() != null) {
-            person.setMaritalStatus(request.maritalStatus());
+            person.setMaritalStatus(normalize(request.maritalStatus()));
         }
         if (request.dateOfBirth() != null) {
             person.setDateOfBirth(request.dateOfBirth());
@@ -68,22 +56,22 @@ public final class PersonMapper {
             person.setDateOfMarriage(request.dateOfMarriage());
         }
         if (request.bloodGroup() != null) {
-            person.setBloodGroup(request.bloodGroup());
+            person.setBloodGroup(normalize(request.bloodGroup()));
         }
         if (request.profession() != null) {
-            person.setProfession(request.profession());
+            person.setProfession(normalize(request.profession()));
         }
         if (request.mobileNo() != null) {
-            person.setMobileNo(request.mobileNo());
+            person.setMobileNo(normalize(request.mobileNo()));
         }
         if (request.aadhaarNumber() != null) {
             person.setAadhaarNumber(normalize(request.aadhaarNumber()));
         }
         if (request.email() != null) {
-            person.setEmail(request.email());
+            person.setEmail(normalize(request.email()));
         }
         if (request.relationshipType() != null) {
-            person.setRelationshipType(request.relationshipType());
+            person.setRelationshipType(normalize(request.relationshipType()));
         }
         if (request.isHead() != null) {
             person.setIsHead(request.isHead());
@@ -94,11 +82,10 @@ public final class PersonMapper {
         return new PersonResponse(
                 person.getId(),
                 person.getFamily().getId(),
-                person.getMemberNo(),
+                person.getMembership() == null ? null : person.getMembership().getId().toString(),
+                person.getMembership() == null ? null : person.getMembership().getName(),
                 person.getFirstName(),
                 person.getLastName(),
-                person.getFatherName(),
-                person.getMotherName(),
                 person.getGender(),
                 person.getMaritalStatus(),
                 person.getDateOfBirth(),

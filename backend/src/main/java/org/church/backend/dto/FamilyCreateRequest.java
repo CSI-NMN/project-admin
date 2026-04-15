@@ -7,7 +7,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public record FamilyCreateRequest(
-        @Size(max = 50) String familyCode,
         @NotBlank @Size(max = 150) String familyName,
         @Size(max = 200) String address1,
         @Size(max = 100) String area,

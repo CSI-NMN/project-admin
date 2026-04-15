@@ -11,7 +11,8 @@ function EditFamilyPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  const familyId = searchParams.get('familyId')
+  const familyIdParam = searchParams.get('familyId')
+  const familyId = familyIdParam ? Number(familyIdParam) : null
   const [family, setFamily] = useState<Family | null>(null)
   const [loading, setLoading] = useState(true)
 

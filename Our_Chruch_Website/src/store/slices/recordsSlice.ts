@@ -6,22 +6,22 @@ interface RecordsState {
 }
 
 interface AddPersonPayload {
-  familyId: string
+  familyId: number
   person: Person
 }
 
 interface UpdatePersonPayload {
-  personId: string
+  personId: number
   data: Partial<Person>
 }
 
 interface UpdateFamilyPayload {
-  familyId: string
+  familyId: number
   data: Partial<Family>
 }
 
 interface DeletePersonPayload {
-  personId: string
+  personId: number
 }
 
 const initialState: RecordsState = {

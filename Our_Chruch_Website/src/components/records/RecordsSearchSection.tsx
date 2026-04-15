@@ -35,7 +35,7 @@ export default function RecordsSearchSection({
       <div className="app-card records-search-card">
         <h2 className="records-section-title">Find an existing record</h2>
         <p className="records-search-help">
-          To view a record, search by member name, family code, phone number, or Aadhaar number.
+          To view a record, search by member name, family code, family ID, subscription name, subscription ID, phone number, or Aadhaar number.
         </p>
 
         <div className="records-search-wrap">
@@ -82,7 +82,7 @@ export default function RecordsSearchSection({
             <button key={person.id} onClick={() => onSelectRecord(person)} className="records-result-item">
               <div>
                 <h3 className="records-result-name">
-                  {person.firstName} {person.lastName}, {person.memberNo}
+                  {person.firstName} {person.lastName}, {person.membershipName || person.memberNo || 'No subscription'}
                 </h3>
                 <p className="records-result-family">
                   Family: {families.find(f => f.id === person.familyId)?.familyName}

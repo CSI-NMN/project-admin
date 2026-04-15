@@ -6,11 +6,8 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
 
 public record PersonUpdateRequest(
-        @Size(min = 1, max = 50) String memberNo,
         @Size(min = 1, max = 100) String firstName,
         @Size(max = 100) String lastName,
-        @Size(max = 100) String fatherName,
-        @Size(max = 100) String motherName,
         @Size(max = 20) String gender,
         @Size(max = 30) String maritalStatus,
         LocalDate dateOfBirth,
@@ -26,7 +23,3 @@ public record PersonUpdateRequest(
         Boolean isHead
 ) {
 }
-
-
-
-

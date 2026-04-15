@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -89,7 +88,7 @@ public class RepositoryService implements IRepositoryService {
     }
 
     @Override
-    public <T> T getRequiredById(Class<T> entityClass, UUID id, String entityName) {
+    public <T> T getRequiredById(Class<T> entityClass, Object id, String entityName) {
         T entity = entityManager.find(entityClass, id);
         if (entity == null) {
             throw new NoSuchElementException(entityName + " not found for id: " + id);
@@ -117,7 +116,7 @@ public class RepositoryService implements IRepositoryService {
     }
 
     @Override
-    public <T> boolean existsById(Class<T> entityClass, UUID id) {
+    public <T> boolean existsById(Class<T> entityClass, Object id) {
         return entityManager.find(entityClass, id) != null;
     }
 

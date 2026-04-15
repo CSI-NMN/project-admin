@@ -11,7 +11,6 @@ interface FamilyFormProps {
 }
 
 const getInitialState = (initialData?: Partial<Family>): Partial<Family> => ({
-  familyCode: initialData?.familyCode || '',
   familyName: initialData?.familyName || '',
   address1: initialData?.address1 || '',
   area: initialData?.area || '',
@@ -46,7 +45,7 @@ export default function FamilyForm({
     void members
 
     if (!isEdit) {
-      onSubmit({ ...payload, familyCode: undefined })
+      onSubmit(payload)
       return
     }
 
@@ -82,7 +81,7 @@ export default function FamilyForm({
           {isEdit && (
             <div>
               <label className="app-label">Family Code</label>
-              <input type="text" value={formData.familyCode || ''} className="app-input" readOnly />
+              <input type="text" value={initialData?.familyCode || ''} className="app-input" readOnly />
             </div>
           )}
           <div>

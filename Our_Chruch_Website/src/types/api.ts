@@ -4,13 +4,12 @@ export interface ODataCollectionResponse<T> {
 }
 
 export interface ApiPersonResponse {
-  id: string
-  familyId: string
-  memberNo: string | null
+  id: number
+  familyId: number
+  memberNo: number | null
+  membershipName: string | null
   firstName: string
   lastName: string | null
-  fatherName: string | null
-  motherName: string | null
   gender: string | null
   maritalStatus: string | null
   dateOfBirth: string | null
@@ -29,7 +28,7 @@ export interface ApiPersonResponse {
 }
 
 export interface ApiFamilyResponse {
-  id: string
+  id: number
   familyCode: string
   familyName: string
   address1: string | null
@@ -38,7 +37,7 @@ export interface ApiFamilyResponse {
   pincode: string | null
   city: string | null
   state: string | null
-  familyHeadId: string | null
+  familyHeadId: number | null
   createdAt: string
   updatedAt: string
   members: ApiPersonResponse[]
@@ -54,8 +53,8 @@ export interface ApiCelebrationFeedItem {
   eventDay: number
   mobile: string | null
   email: string | null
-  actionPersonId: string
-  actionFamilyId: string
+  actionPersonId: number
+  actionFamilyId: number
 }
 
 export interface ApiCelebrationsResponse {

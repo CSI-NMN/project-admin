@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Family, Person } from '@/types/records'
 
 interface RecordsFormProps {
@@ -10,7 +10,19 @@ interface RecordsFormProps {
   onSubmit: (data: Partial<Person>) => void
   onCancel: () => void
   hideFamily?: boolean
+  forceHeadSelection?: boolean
 }
+
+const getInitialState = (initialData?: Partial<Person>): Partial<Person> => ({
+  firstName: '',
+  lastName: '',
+  relationshipType: 'Child',
+  isHead: false,
+  createSubscription: false,
+  subscriptionName: '',
+  familyId: '',
+  ...initialData,
+})
 
 export default function RecordsForm({
   initialData,
@@ -19,28 +31,46 @@ export default function RecordsForm({
   onSubmit,
   onCancel,
   hideFamily = false,
+  forceHeadSelection = false,
 }: RecordsFormProps) {
-  const [formData, setFormData] = useState<Partial<Person>>(
-    initialData || {
-      memberNo: '',
-      firstName: '',
-      lastName: '',
-      relationshipType: 'Child',
-      isHead: false,
-      familyId: '',
-    }
-  )
+  const [formData, setFormData] = useState<Partial<Person>>(getInitialState(initialData))
 
   const handleChange = (field: keyof Person, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
+  useEffect(() => {
+    const state = getInitialState(initialData)
+
+    if (forceHeadSelection) {
+      state.isHead = true
+      state.relationshipType = 'Head'
+    }
+
+    setFormData(state)
+  }, [initialData, forceHeadSelection])
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const { id, createdAt, updatedAt, ...payload } = formData
+    const { id, createdAt, updatedAt, membershipName, ...payload } = formData
     void id
     void createdAt
     void updatedAt
+    void membershipName
+
+    if (!isNew) {
+      delete payload.createSubscription
+      delete payload.subscriptionName
+    }
+
+    if (isNew && payload.createSubscription && !payload.subscriptionName) {
+      payload.subscriptionName = payload.firstName || ''
+    }
+
+    if (forceHeadSelection) {
+      payload.isHead = true
+      payload.relationshipType = 'Head'
+    }
 
     if (isNew) {
       onSubmit(payload)
@@ -97,14 +127,49 @@ export default function RecordsForm({
             />
           </div>
           <div>
-            <label className="app-label">Subscription Card No</label>
-            <input
-              type="text"
-              value={formData.memberNo || ''}
-              onChange={e => handleChange('memberNo', e.target.value)}
-              className="app-input"
-              required
-            />
+            <label className="app-label">{isNew ? 'Add new Subscription' : 'Subscription'}</label>
+            {isNew ? (
+              <div className="space-y-3 pt-2">
+                <label className="inline-flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="createSubscription"
+                    checked={Boolean(formData.createSubscription)}
+                    onChange={() =>
+                      setFormData(prev => ({
+                        ...prev,
+                        createSubscription: true,
+                      }))
+                    }
+                  />
+                  <span className="text-sm text-gray-700">Yes</span>
+                </label>
+                <label className="inline-flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="createSubscription"
+                    checked={!formData.createSubscription}
+                    onChange={() =>
+                      setFormData(prev => ({
+                        ...prev,
+                        createSubscription: false,
+                        subscriptionName: '',
+                      }))
+                    }
+                  />
+                  <span className="text-sm text-gray-700">No</span>
+                </label>
+              </div>
+            ) : (
+              <div className="pt-2">
+                <p className="text-sm text-gray-900">
+                  {formData.membershipName || formData.memberNo || 'No subscription linked'}
+                </p>
+                {formData.membershipName && formData.memberNo && (
+                  <p className="text-xs text-gray-500 mt-1">{formData.memberNo}</p>
+                )}
+              </div>
+            )}
           </div>
           <div>
             <label className="app-label">Relationship Type</label>
@@ -112,6 +177,7 @@ export default function RecordsForm({
               value={formData.relationshipType || ''}
               onChange={e => handleChange('relationshipType', e.target.value)}
               className="app-input"
+              disabled={forceHeadSelection}
             >
               <option value="Head">Head</option>
               <option value="Spouse">Spouse</option>

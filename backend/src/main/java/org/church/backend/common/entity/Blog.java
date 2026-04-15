@@ -1,7 +1,6 @@
 package org.church.backend.common.entity;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -21,8 +20,8 @@ import lombok.Setter;
 public class Blog {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Column(name = "\"createdAt\"", nullable = false, updatable = false)
     private LocalDateTime createdAt;

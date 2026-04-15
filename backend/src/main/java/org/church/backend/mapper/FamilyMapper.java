@@ -15,7 +15,6 @@ public final class FamilyMapper {
 
     public static Family toEntity(FamilyCreateRequest request) {
         Family family = new Family();
-        family.setFamilyCode(request.familyCode() == null ? "" : request.familyCode().trim());
         family.setFamilyName(request.familyName().trim());
         family.setAddress1(trimToNull(request.address1()));
         family.setArea(trimToNull(request.area()));
@@ -27,9 +26,6 @@ public final class FamilyMapper {
     }
 
     public static void applyUpdate(Family family, FamilyUpdateRequest request) {
-        if (request.familyCode() != null) {
-            family.setFamilyCode(request.familyCode().trim());
-        }
         if (request.familyName() != null) {
             family.setFamilyName(request.familyName().trim());
         }

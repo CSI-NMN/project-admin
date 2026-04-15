@@ -21,14 +21,14 @@ function AdminRecordsPageContent() {
   const [selectedFamily, setSelectedFamily] = useState<Family | null>(null)
   const [showTable, setShowTable] = useState(false)
   const [showHierarchyEditor, setShowHierarchyEditor] = useState(false)
-  const [selectedHierarchyPersonIds, setSelectedHierarchyPersonIds] = useState<string[]>([])
-  const [targetFamilyId, setTargetFamilyId] = useState('')
+  const [selectedHierarchyPersonIds, setSelectedHierarchyPersonIds] = useState<number[]>([])
+  const [targetFamilyId, setTargetFamilyId] = useState<number | null>(null)
   const [showSplitModal, setShowSplitModal] = useState(false)
   const [splitModalMode, setSplitModalMode] = useState<SplitModalMode>('choose')
   const [familySearchQuery, setFamilySearchQuery] = useState('')
   const [deleteCandidate, setDeleteCandidate] = useState<Person | null>(null)
 
-  const selectedFamilyId = selectedFamily?.id || ''
+  const selectedFamilyId = selectedFamily?.id
 
   const availableFamilies = useMemo(
     () => families.filter(family => family.id !== selectedFamily?.id),
@@ -78,7 +78,8 @@ function AdminRecordsPageContent() {
   }, [fetchFamilies])
 
   useEffect(() => {
-    const familyId = searchParams.get('familyId')
+    const familyIdParam = searchParams.get('familyId')
+    const familyId = familyIdParam ? Number(familyIdParam) : null
     if (!familyId) return
 
     const family = families.find(f => f.id === familyId)
@@ -105,9 +106,13 @@ function AdminRecordsPageContent() {
     let active = true
     const numericQuery = query.replace(/\D/g, '')
     const normalizedQuery = query.toLowerCase()
+    const familyIdQuery = /^\d+$/.test(query) ? Number(query) : undefined
 
     recordsService
       .searchFamilies({
+        familyId: familyIdQuery,
+        familyCode: query,
+        memberNo: query,
         memberName: query,
         phoneNumber: query,
         aadhaarNumber: query,
@@ -122,16 +127,19 @@ function AdminRecordsPageContent() {
             family.members
               .filter(member => {
                 const fullName = `${member.firstName} ${member.lastName || ''}`.toLowerCase()
-                const subscription = (member.memberNo || '').toLowerCase()
+                const subscription = String(member.memberNo || '').toLowerCase()
+                const subscriptionName = (member.membershipName || '').toLowerCase()
                 const phone = (member.mobileNo || '').toLowerCase()
                 const phoneDigits = phone.replace(/\D/g, '')
                 const aadhaar = (member.aadhaarNumber || '').toLowerCase()
 
                 return (
                   fullName.includes(normalizedQuery) ||
+                  subscriptionName.includes(normalizedQuery) ||
                   subscription.includes(normalizedQuery) ||
                   phone.includes(normalizedQuery) ||
                   aadhaar.includes(normalizedQuery) ||
+                  String(family.id) === normalizedQuery ||
                   family.familyCode.toLowerCase().includes(normalizedQuery) ||
                   (numericQuery.length > 0 && phoneDigits.includes(numericQuery))
                 )
@@ -203,7 +211,7 @@ function AdminRecordsPageContent() {
     router.push('/records')
   }
 
-  const handleEditPerson = (personId: string) => {
+  const handleEditPerson = (personId: number) => {
     if (!selectedFamily?.id) return
     router.push(`/records/edit?familyId=${selectedFamily.id}&id=${personId}`)
   }
@@ -257,7 +265,7 @@ function AdminRecordsPageContent() {
   }
 
   const handleMoveToDifferentFamily = async () => {
-    if (selectedHierarchyPersonIds.length === 0 || !targetFamilyId) {
+    if (selectedHierarchyPersonIds.length === 0 || targetFamilyId == null) {
       showInfoToast('Select one or more people and a target family.')
       return
     }
@@ -279,7 +287,7 @@ function AdminRecordsPageContent() {
     }
   }
 
-  const handleSelectHierarchyPerson = (personId: string) => {
+  const handleSelectHierarchyPerson = (personId: number) => {
     setSelectedHierarchyPersonIds(prev =>
       prev.includes(personId) ? prev.filter(id => id !== personId) : [...prev, personId]
     )

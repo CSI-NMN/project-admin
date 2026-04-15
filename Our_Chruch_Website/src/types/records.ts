@@ -1,5 +1,5 @@
 export interface Family {
-  id: string
+  id: number
   familyCode: string
   familyName: string
   address1?: string
@@ -8,20 +8,19 @@ export interface Family {
   pincode?: string
   city?: string
   state?: string
-  familyHeadId?: string
+  familyHeadId?: number
   createdAt?: string
   updatedAt?: string
   members: Person[]
 }
 
 export interface Person {
-  id: string
-  familyId: string
-  memberNo?: string
+  id: number
+  familyId: number
+  memberNo?: number
+  membershipName?: string
   firstName: string
   lastName?: string
-  fatherName?: string
-  motherName?: string
   gender?: string
   maritalStatus?: string
   dateOfBirth?: string
@@ -35,6 +34,8 @@ export interface Person {
   email?: string
   relationshipType?: string
   isHead: boolean
+  createSubscription?: boolean
+  subscriptionName?: string
   createdAt?: string
   updatedAt?: string
 }
@@ -50,8 +51,8 @@ export interface CelebrationFeedItem {
   eventDay: number
   mobile: string
   email: string
-  actionPersonId: string
-  actionFamilyId: string
+  actionPersonId: number
+  actionFamilyId: number
 }
 
 export interface CelebrationsDto {

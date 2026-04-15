@@ -2,10 +2,9 @@ package org.church.backend.dto;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 public record FamilyResponse(
-        UUID id,
+        Long id,
         String familyCode,
         String familyName,
         String address1,
@@ -14,7 +13,7 @@ public record FamilyResponse(
         String pincode,
         String city,
         String state,
-        UUID familyHeadId,
+        Long familyHeadId,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
         List<PersonResponse> members

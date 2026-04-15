@@ -2,7 +2,6 @@ package org.church.backend.common.entity;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -25,8 +24,8 @@ import lombok.Setter;
 public class Person {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Column(name = "\"createdAt\"", updatable = false)
     private LocalDateTime createdAt;
@@ -38,20 +37,15 @@ public class Person {
     @JoinColumn(name = "\"familyId\"", nullable = false)
     private Family family;
 
-    @Column(name = "\"memberNo\"", length = 50)
-    private String memberNo;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "\"memberNo\"")
+    private Membership membership;
 
     @Column(name = "\"firstName\"", nullable = false, length = 100)
     private String firstName;
 
     @Column(name = "\"lastName\"", length = 100)
     private String lastName;
-
-    @Column(name = "\"fatherName\"", length = 100)
-    private String fatherName;
-
-    @Column(name = "\"motherName\"", length = 100)
-    private String motherName;
 
     @Column(name = "\"gender\"", length = 20)
     private String gender;

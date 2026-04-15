@@ -11,8 +11,10 @@ function EditRecordPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  const personId = searchParams.get('id')
-  const familyId = searchParams.get('familyId')
+  const personIdParam = searchParams.get('id')
+  const familyIdParam = searchParams.get('familyId')
+  const personId = personIdParam ? Number(personIdParam) : null
+  const familyId = familyIdParam ? Number(familyIdParam) : null
   const source = searchParams.get('source')
 
   const [families, setFamilies] = useState<Family[]>([])
@@ -53,7 +55,7 @@ function EditRecordPageContent() {
     }
   }, [familyId, personId])
 
-  const buildReturnUrl = (resolvedFamilyId?: string) => {
+  const buildReturnUrl = (resolvedFamilyId?: number) => {
     if (source === 'celebrations') {
       return '/celebrations'
     }

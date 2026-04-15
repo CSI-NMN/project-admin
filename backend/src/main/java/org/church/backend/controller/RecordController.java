@@ -1,7 +1,5 @@
 package org.church.backend.controller;
 
-import java.util.UUID;
-
 import org.church.backend.common.odata.ODataCollectionResponse;
 import org.church.backend.common.odata.ODataQueryOptions;
 import org.church.backend.abstraction.IRecordsService;
@@ -49,7 +47,7 @@ public class RecordController {
             @RequestParam(name = "pincode", required = false) String pincode,
             @RequestParam(name = "city", required = false) String city,
             @RequestParam(name = "state", required = false) String state,
-            @RequestParam(name = "familyHeadId", required = false) UUID familyHeadId,
+            @RequestParam(name = "familyHeadId", required = false) Long familyHeadId,
             @RequestParam(name = "$top", required = false) Integer top,
             @RequestParam(name = "$skip", required = false) Integer skip,
             @RequestParam(name = "$orderby", required = false) String orderBy,
@@ -68,7 +66,7 @@ public class RecordController {
     }
 
     @GetMapping({"({familyId})", "/{familyId}"})
-    public FamilyResponse getFamilyById(@PathVariable UUID familyId) {
+    public FamilyResponse getFamilyById(@PathVariable Long familyId) {
         return recordsService.getFamilyById(familyId);
     }
 
@@ -79,20 +77,22 @@ public class RecordController {
     }
 
     @PatchMapping({"({familyId})", "/{familyId}"})
-    public FamilyResponse updateFamily(@PathVariable UUID familyId, @RequestBody @Valid FamilyUpdateRequest request) {
+    public FamilyResponse updateFamily(@PathVariable Long familyId, @RequestBody @Valid FamilyUpdateRequest request) {
         return recordsService.updateFamily(familyId, request);
     }
 
     @DeleteMapping({"({familyId})", "/{familyId}"})
-    public ResponseEntity<Void> deleteFamily(@PathVariable UUID familyId) {
+    public ResponseEntity<Void> deleteFamily(@PathVariable Long familyId) {
         recordsService.deleteFamily(familyId);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/search")
     public ODataCollectionResponse<FamilyResponse> search(
-            @RequestParam(name = "familyId", required = false) UUID familyId,
-            @RequestParam(name = "familyHeadId", required = false) UUID familyHeadId,
+            @RequestParam(name = "familyId", required = false) Long familyId,
+            @RequestParam(name = "familyHeadId", required = false) Long familyHeadId,
+            @RequestParam(name = "familyCode", required = false) String familyCode,
+            @RequestParam(name = "memberNo", required = false) String memberNo,
             @RequestParam(name = "memberName", required = false) String memberName,
             @RequestParam(name = "phoneNumber", required = false) String phoneNumber,
             @RequestParam(name = "aadhaarNumber", required = false) String aadhaarNumber,
@@ -103,6 +103,8 @@ public class RecordController {
         return recordsService.search(
                 familyId,
                 familyHeadId,
+                familyCode,
+                memberNo,
                 memberName,
                 phoneNumber,
                 aadhaarNumber,
@@ -116,7 +118,7 @@ public class RecordController {
 
     @GetMapping({"({familyId})/Persons", "/{familyId}/Persons"})
     public ODataCollectionResponse<PersonResponse> listFamilyMembers(
-            @PathVariable UUID familyId,
+            @PathVariable Long familyId,
             @RequestParam(name = "memberNo", required = false) String memberNo,
             @RequestParam(name = "firstName", required = false) String firstName,
             @RequestParam(name = "lastName", required = false) String lastName,
@@ -130,13 +132,13 @@ public class RecordController {
     }
 
     @GetMapping({"({familyId})/Persons({personId})", "/{familyId}/Persons/{personId}"})
-    public PersonResponse getFamilyMemberById(@PathVariable UUID familyId, @PathVariable UUID personId) {
+    public PersonResponse getFamilyMemberById(@PathVariable Long familyId, @PathVariable Long personId) {
         return recordsService.getFamilyMemberById(familyId, personId);
     }
 
     @PostMapping({"({familyId})/Persons", "/{familyId}/Persons"})
     public ResponseEntity<PersonResponse> addFamilyMember(
-            @PathVariable UUID familyId,
+            @PathVariable Long familyId,
             @RequestBody @Valid PersonCreateRequest request) {
         PersonResponse created = recordsService.addFamilyMember(familyId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
@@ -144,21 +146,21 @@ public class RecordController {
 
     @PatchMapping({"({familyId})/Persons({personId})", "/{familyId}/Persons/{personId}"})
     public PersonResponse updateFamilyMember(
-            @PathVariable UUID familyId,
-            @PathVariable UUID personId,
+            @PathVariable Long familyId,
+            @PathVariable Long personId,
             @RequestBody @Valid PersonUpdateRequest request) {
         return recordsService.updateFamilyMember(familyId, personId, request);
     }
 
     @DeleteMapping({"({familyId})/Persons({personId})", "/{familyId}/Persons/{personId}"})
-    public ResponseEntity<Void> deleteFamilyMember(@PathVariable UUID familyId, @PathVariable UUID personId) {
+    public ResponseEntity<Void> deleteFamilyMember(@PathVariable Long familyId, @PathVariable Long personId) {
         recordsService.deleteFamilyMember(familyId, personId);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping({"/Persons({personId})/move", "/Persons/{personId}/move"})
     public PersonResponse moveFamilyMember(
-            @PathVariable UUID personId,
+            @PathVariable Long personId,
             @RequestBody @Valid MovePersonRequest request) {
         return recordsService.moveFamilyMember(personId, request);
     }

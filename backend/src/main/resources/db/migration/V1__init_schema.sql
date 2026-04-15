@@ -2,10 +2,8 @@
 -- CREATE DATABASE churchdb;
 -- Flyway migrations run only after connecting to the target database.
 
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
-
 CREATE TABLE IF NOT EXISTS families (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id BIGSERIAL PRIMARY KEY,
     "familyCode" VARCHAR(50) NOT NULL UNIQUE,
     "familyName" VARCHAR(150) NOT NULL,
     "address1" VARCHAR(200),
@@ -14,19 +12,22 @@ CREATE TABLE IF NOT EXISTS families (
     "pincode" VARCHAR(20),
     "city" VARCHAR(100),
     "state" VARCHAR(100),
-    "familyHeadId" UUID,
+    "familyHeadId" BIGINT,
     "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS memberships (
+    id BIGSERIAL PRIMARY KEY,
+    "name" VARCHAR(150) NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS persons (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    "familyId" UUID NOT NULL,
-    "memberNo" VARCHAR(50),
+    id BIGSERIAL PRIMARY KEY,
+    "familyId" BIGINT NOT NULL,
+    "memberNo" BIGINT,
     "firstName" VARCHAR(100) NOT NULL,
     "lastName" VARCHAR(100),
-    "fatherName" VARCHAR(100),
-    "motherName" VARCHAR(100),
     "gender" VARCHAR(20),
     "maritalStatus" VARCHAR(30),
     "dateOfBirth" DATE,
@@ -43,13 +44,17 @@ CREATE TABLE IF NOT EXISTS persons (
     "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT persons_family_id_fkey
-        FOREIGN KEY ("familyId") REFERENCES families (id) ON DELETE CASCADE
+        FOREIGN KEY ("familyId") REFERENCES families (id) ON DELETE CASCADE,
+    CONSTRAINT persons_member_no_fkey
+        FOREIGN KEY ("memberNo") REFERENCES memberships (id) ON DELETE SET NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_persons_family_id ON persons("familyId");
+CREATE INDEX IF NOT EXISTS idx_persons_member_no ON persons("memberNo");
 CREATE INDEX IF NOT EXISTS idx_persons_mobile_no ON persons("mobileNo");
 CREATE UNIQUE INDEX IF NOT EXISTS uk_persons_aadhaar_number
     ON persons("aadhaarNumber") WHERE "aadhaarNumber" IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_memberships_name ON memberships("name");
 CREATE INDEX IF NOT EXISTS idx_families_family_code ON families("familyCode");
 
 DO $$
@@ -66,7 +71,7 @@ BEGIN
 END $$;
 
 CREATE TABLE IF NOT EXISTS financial_years (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id BIGSERIAL PRIMARY KEY,
     "yearLabel" VARCHAR(20) NOT NULL UNIQUE,
     "startDate" DATE NOT NULL,
     "endDate" DATE NOT NULL,
@@ -74,7 +79,7 @@ CREATE TABLE IF NOT EXISTS financial_years (
 );
 
 CREATE TABLE IF NOT EXISTS events (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id BIGSERIAL PRIMARY KEY,
     "name" VARCHAR(150) NOT NULL,
     "startDate" DATE,
     "endDate" DATE,
@@ -85,9 +90,9 @@ CREATE TABLE IF NOT EXISTS events (
 );
 
 CREATE TABLE IF NOT EXISTS subscriptions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    "familyId" UUID NOT NULL,
-    "financialYearId" UUID NOT NULL,
+    id BIGSERIAL PRIMARY KEY,
+    "familyId" BIGINT NOT NULL,
+    "financialYearId" BIGINT NOT NULL,
     "santhaAmount" NUMERIC(12,2) NOT NULL DEFAULT 0,
     "ministryAmount" NUMERIC(12,2) NOT NULL DEFAULT 0,
     "mainAmount" NUMERIC(12,2) NOT NULL DEFAULT 0,
@@ -103,12 +108,12 @@ CREATE TABLE IF NOT EXISTS subscriptions (
 );
 
 CREATE TABLE IF NOT EXISTS transactions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id BIGSERIAL PRIMARY KEY,
     "type" VARCHAR(20) NOT NULL,
     "category" VARCHAR(20) NOT NULL,
     "amount" NUMERIC(12,2) NOT NULL,
-    "financialYearId" UUID NOT NULL,
-    "eventId" UUID,
+    "financialYearId" BIGINT NOT NULL,
+    "eventId" BIGINT,
     "month" INTEGER,
     "description" TEXT,
     "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -121,8 +126,8 @@ CREATE TABLE IF NOT EXISTS transactions (
 );
 
 CREATE TABLE IF NOT EXISTS event_audit_items (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    "eventId" UUID NOT NULL,
+    id BIGSERIAL PRIMARY KEY,
+    "eventId" BIGINT NOT NULL,
     "type" VARCHAR(20) NOT NULL,
     "description" TEXT NOT NULL,
     "amount" NUMERIC(12,2),
@@ -133,7 +138,7 @@ CREATE TABLE IF NOT EXISTS event_audit_items (
 );
 
 CREATE TABLE IF NOT EXISTS blogs (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id BIGSERIAL PRIMARY KEY,
     "title" VARCHAR(200) NOT NULL,
     "content" TEXT NOT NULL,
     "imageUrl" VARCHAR(500),
@@ -141,7 +146,7 @@ CREATE TABLE IF NOT EXISTS blogs (
 );
 
 CREATE TABLE IF NOT EXISTS magazines (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id BIGSERIAL PRIMARY KEY,
     "month" INTEGER NOT NULL,
     "year" INTEGER NOT NULL,
     "fileUrl" VARCHAR(500) NOT NULL,
@@ -155,13 +160,13 @@ CREATE INDEX IF NOT EXISTS idx_transactions_event_id ON transactions("eventId");
 CREATE INDEX IF NOT EXISTS idx_event_audit_items_event_id ON event_audit_items("eventId");
 
 CREATE OR REPLACE FUNCTION search_records(
-    p_familyId UUID DEFAULT NULL,
-    p_familyHeadId UUID DEFAULT NULL,
+    p_familyId BIGINT DEFAULT NULL,
+    p_familyHeadId BIGINT DEFAULT NULL,
     p_memberName VARCHAR DEFAULT NULL,
     p_phoneNumber VARCHAR DEFAULT NULL,
     p_aadhaarNumber VARCHAR DEFAULT NULL
 )
-RETURNS TABLE("familyId" UUID)
+RETURNS TABLE("familyId" BIGINT)
 LANGUAGE plpgsql
 AS $$
 BEGIN

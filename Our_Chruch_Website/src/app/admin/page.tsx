@@ -81,6 +81,7 @@ export default function AdminPage() {
         const fullName = `${person.firstName} ${person.lastName}`.toLowerCase()
         return (
           fullName.includes(normalizedQuery) ||
+          (person.membershipName || '').toLowerCase().includes(normalizedQuery) ||
           (person.memberNo || '').toLowerCase().includes(normalizedQuery) ||
           (person.mobileNo || '').toLowerCase().includes(normalizedQuery) ||
           (person.email || '').toLowerCase().includes(normalizedQuery)
@@ -113,7 +114,7 @@ export default function AdminPage() {
       addAdmin({
         id: `admin-${Date.now()}`,
         personId: selectedPerson.id,
-        memberId: selectedPerson.memberNo || '',
+        memberId: selectedPerson.membershipName || selectedPerson.memberNo || '',
         name: `${selectedPerson.firstName} ${selectedPerson.lastName}`,
         email: selectedPerson.email || '',
         role: selectedRole,

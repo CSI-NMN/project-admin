@@ -1,8 +1,8 @@
 spring:
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/churchdb}
-    username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:postgres}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:1234}
 
   jpa:
     hibernate:
@@ -29,4 +29,3 @@ app:
   odata:
     default-top: 25
     max-top: 200
-

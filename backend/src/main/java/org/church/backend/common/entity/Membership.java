@@ -1,7 +1,5 @@
 package org.church.backend.common.entity;
 
-import java.time.LocalDateTime;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -13,25 +11,16 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "magazines")
+@Table(name = "memberships")
 @Getter
 @Setter
 @NoArgsConstructor
-public class Magazine {
+public class Membership {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "\"createdAt\"", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @Column(name = "\"month\"", nullable = false)
-    private Integer month;
-
-    @Column(name = "\"year\"", nullable = false)
-    private Integer year;
-
-    @Column(name = "\"fileUrl\"", nullable = false, length = 500)
-    private String fileUrl;
+    @Column(name = "\"name\"", nullable = false, length = 150)
+    private String name;
 }

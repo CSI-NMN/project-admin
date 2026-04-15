@@ -15,13 +15,14 @@ function CreateRecordPageContent() {
   const searchParams = useSearchParams()
 
   const mode = searchParams.get('mode')
-  const familyIdFromQuery = searchParams.get('familyId') || ''
+  const familyIdFromQuery = searchParams.get('familyId')
+  const resolvedFamilyIdFromQuery = familyIdFromQuery ? Number(familyIdFromQuery) : null
   const movePersonIdsParam =
     searchParams.get('movePersonIds') || searchParams.get('movePersonId') || ''
   const movePersonIds = movePersonIdsParam
     .split(',')
-    .map(id => id.trim())
-    .filter(Boolean)
+    .map(id => Number(id.trim()))
+    .filter(id => Number.isFinite(id) && id > 0)
 
   const isDirectPersonMode = mode === 'person'
   const isMovePersonToNewFamily = movePersonIds.length > 0
@@ -31,8 +32,8 @@ function CreateRecordPageContent() {
   const [familyDraft, setFamilyDraft] = useState<Partial<Family> | null>(null)
 
   const selectedFamilyFromQuery = useMemo(
-    () => families.find(f => f.id === familyIdFromQuery) || null,
-    [families, familyIdFromQuery]
+    () => families.find(f => f.id === resolvedFamilyIdFromQuery) || null,
+    [families, resolvedFamilyIdFromQuery]
   )
 
   useEffect(() => {
@@ -71,7 +72,7 @@ function CreateRecordPageContent() {
 
   const handlePersonSubmit = async (data: Partial<Person>) => {
     try {
-      const targetFamilyId = data.familyId || familyIdFromQuery
+      const targetFamilyId = data.familyId || resolvedFamilyIdFromQuery
       if (targetFamilyId) {
         await recordsService.addFamilyMember(targetFamilyId, data)
         router.push(`/records?familyId=${targetFamilyId}`)
@@ -102,8 +103,8 @@ function CreateRecordPageContent() {
     }
 
     if (isDirectPersonMode) {
-      if (familyIdFromQuery) {
-        router.push(`/records?familyId=${familyIdFromQuery}`)
+      if (resolvedFamilyIdFromQuery) {
+        router.push(`/records?familyId=${resolvedFamilyIdFromQuery}`)
         return
       }
       router.push('/records')
@@ -126,9 +127,13 @@ function CreateRecordPageContent() {
         ? 'Back to Family'
         : 'Back to Records'
 
-  const initialPersonData = familyIdFromQuery
-    ? { familyId: familyIdFromQuery }
+  const initialPersonData = resolvedFamilyIdFromQuery
+    ? { familyId: resolvedFamilyIdFromQuery }
     : undefined
+
+  const forceHeadSelection =
+    Boolean(familyDraft) ||
+    (Boolean(resolvedFamilyIdFromQuery) && (selectedFamilyFromQuery?.members.length ?? 0) === 0)
 
   return (
     <div className="app-page">
@@ -179,7 +184,8 @@ function CreateRecordPageContent() {
               initialData={initialPersonData}
               isNew={true}
               families={families}
-              hideFamily={Boolean(familyIdFromQuery || familyDraft)}
+              hideFamily={Boolean(resolvedFamilyIdFromQuery || familyDraft)}
+              forceHeadSelection={forceHeadSelection}
               onSubmit={handlePersonSubmit}
               onCancel={handleBackClick}
             />
