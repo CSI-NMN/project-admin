@@ -31,6 +31,10 @@ public class Subscription {
     @JoinColumn(name = "\"familyId\"", nullable = false)
     private Family family;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "\"personId\"")
+    private Person person;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "\"financialYearId\"", nullable = false)
     private FinancialYear financialYear;
@@ -52,4 +56,13 @@ public class Subscription {
 
     @Column(name = "\"lastSavedAt\"")
     private LocalDateTime lastSavedAt;
+
+    @Column(name = "\"cardPayload\"", nullable = false, columnDefinition = "TEXT")
+    private String cardPayload = "{}";
+
+    @Column(name = "\"submittedAt\"")
+    private LocalDateTime submittedAt;
+
+    @Column(name = "\"isLocked\"", nullable = false)
+    private Boolean isLocked = false;
 }

@@ -65,3 +65,27 @@ export interface ApiCelebrationsResponse {
   birthdays: ApiCelebrationFeedItem[]
   anniversaries: ApiCelebrationFeedItem[]
 }
+
+export interface ApiSubscriptionFinancialYearResponse {
+  id: number
+  yearLabel: string
+  startDate: string
+  endDate: string
+  active: boolean
+}
+
+export interface ApiSubscriptionCardResponse {
+  id: number | null
+  personId: number
+  familyId: number
+  personName: string
+  familyName: string
+  memberNo: string | null
+  financialYearId: number
+  financialYearLabel: string
+  status: 'DRAFT' | 'SUBMITTED'
+  isLocked: boolean
+  totalAmount: number
+  lastSavedAt: string | null
+  cardPayload: string
+}
