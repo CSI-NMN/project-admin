@@ -1,4 +1,4 @@
-name: Frontend PR Build Check
+name: Backend PR Build Check
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -7,8 +7,8 @@ concurrency:
 on:
   pull_request:
     paths:
-      - "Our_Chruch_Website/**"
+      - "backend/**"
 
 jobs:
-  frontend-build:
-    uses: ./.github/workflows/frontend_build.yml
+  backend-build:
+    uses: ./.github/workflows/backend_build.yml
