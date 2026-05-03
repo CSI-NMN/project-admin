@@ -1,11 +1,12 @@
 'use client'
 
 import './admin.css'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { addAdmin, removeAdmin, updateAdminRole } from '@/store/slices/adminSlice'
 import { AdminRecord, AdminRole } from '@/types/admin'
-import { Person } from '@/types/records'
+import { Family, Person } from '@/types/records'
+import { recordsService } from '@/store/api/recordsApi'
 import AdminListSection from '@/components/admin/AdminListSection'
 import AdminFormSection from '@/components/admin/AdminFormSection'
 import ConfirmAdminModal from '@/components/admin/ConfirmAdminModal'
@@ -34,7 +35,7 @@ const ROLE_OPTIONS: { value: AdminRole; description: string }[] = [
 export default function AdminPage() {
   const dispatch = useAppDispatch()
   const admins = useAppSelector(state => state.admin.admins)
-  const families = useAppSelector(state => state.records.families)
+  const [families, setFamilies] = useState<Family[]>([])
 
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -44,6 +45,28 @@ export default function AdminPage() {
   const [editCandidate, setEditCandidate] = useState<AdminRecord | null>(null)
   const [editRole, setEditRole] = useState<AdminRole | ''>('')
   const [removeCandidate, setRemoveCandidate] = useState<AdminRecord | null>(null)
+
+  useEffect(() => {
+    let active = true
+
+    recordsService
+      .listFamilies({
+        $top: 1000,
+        $skip: 0,
+      })
+      .then(data => {
+        if (!active) return
+        setFamilies(data)
+      })
+      .catch(() => {
+        if (!active) return
+        setFamilies([])
+      })
+
+    return () => {
+      active = false
+    }
+  }, [])
 
   const allPeople = useMemo(() => families.flatMap(family => family.members), [families])
   const assignedPersonIds = useMemo(() => new Set(admins.map(admin => admin.personId)), [admins])
@@ -55,11 +78,12 @@ export default function AdminPage() {
     return allPeople
       .filter(person => !assignedPersonIds.has(person.id))
       .filter(person => {
-        const fullName = `${person.first_name} ${person.last_name}`.toLowerCase()
+        const fullName = `${person.firstName} ${person.lastName}`.toLowerCase()
         return (
           fullName.includes(normalizedQuery) ||
-          person.subscriptionCardNo.toLowerCase().includes(normalizedQuery) ||
-          (person.mobile_no || '').toLowerCase().includes(normalizedQuery) ||
+          (person.membershipName || '').toLowerCase().includes(normalizedQuery) ||
+          (person.memberNo || '').toLowerCase().includes(normalizedQuery) ||
+          (person.mobileNo || '').toLowerCase().includes(normalizedQuery) ||
           (person.email || '').toLowerCase().includes(normalizedQuery)
         )
       })
@@ -90,8 +114,8 @@ export default function AdminPage() {
       addAdmin({
         id: `admin-${Date.now()}`,
         personId: selectedPerson.id,
-        memberId: selectedPerson.subscriptionCardNo,
-        name: `${selectedPerson.first_name} ${selectedPerson.last_name}`,
+        memberId: selectedPerson.membershipName || selectedPerson.memberNo || '',
+        name: `${selectedPerson.firstName} ${selectedPerson.lastName}`,
         email: selectedPerson.email || '',
         role: selectedRole,
       })
@@ -176,3 +200,4 @@ export default function AdminPage() {
     </div>
   )
 }
+

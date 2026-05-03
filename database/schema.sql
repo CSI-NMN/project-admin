@@ -2,6 +2,11 @@
 -- PostgreSQL database dump
 --
 
+\set ON_ERROR_STOP on
+SELECT 'CREATE DATABASE churchdb'
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'churchdb')\gexec
+\connect churchdb
+
 \restrict hBHQKDTUH6ynilodS2KEYsDRg8LNdZ81oPhtQiCcQOC2gFtqG9iSrJNy5wBoFAH
 
 -- Dumped from database version 18.1

@@ -1,26 +1,13 @@
 import DeleteIcon from '@/components/common/DeleteIcon'
 import EditIcon from '@/components/common/EditIcon'
-
-export type CelebrationFeedType = 'birthdays' | 'anniversaries'
-
-export interface CelebrationFeedItem {
-  id: string
-  name: string
-  familyName: string
-  familyCode: string
-  eventDateLabel: string
-  eventDay: number
-  mobile: string
-  email: string
-  actionPersonId: string
-}
+import { CelebrationFeedItem, CelebrationFeedType } from '@/types/records'
 
 interface CelebrationsFeedTableProps {
   feedType: CelebrationFeedType
   monthLabel: string
   items: CelebrationFeedItem[]
-  onEditRecord: (personId: string) => void
-  onDeleteRecord: (personId: string) => void
+  onEditRecord: (personId: number, familyId: number) => void
+  onDeleteRecord: (personId: number, familyId: number, displayName: string) => void
 }
 
 export default function CelebrationsFeedTable({
@@ -69,7 +56,7 @@ export default function CelebrationsFeedTable({
               <td className="celebrations-table-td">
                 <div className="celebrations-action-group">
                   <button
-                    onClick={() => onEditRecord(item.actionPersonId)}
+                    onClick={() => onEditRecord(item.actionPersonId, item.actionFamilyId)}
                     className="celebrations-action-icon-btn"
                     aria-label={`Edit ${item.name}`}
                     title="Edit"
@@ -78,7 +65,7 @@ export default function CelebrationsFeedTable({
                     <EditIcon />
                   </button>
                   <button
-                    onClick={() => onDeleteRecord(item.actionPersonId)}
+                    onClick={() => onDeleteRecord(item.actionPersonId, item.actionFamilyId, item.name)}
                     className="celebrations-action-icon-btn celebrations-action-icon-btn-delete"
                     aria-label={`Delete ${item.name}`}
                     title="Delete"

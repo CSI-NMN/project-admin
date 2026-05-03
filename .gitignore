@@ -45,3 +45,4 @@ backend/.metadata
 backend/.vscode
 backend/.mvn
 backend/.m2
+backend/.m2repo

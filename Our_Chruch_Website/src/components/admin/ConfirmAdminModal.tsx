@@ -24,7 +24,7 @@ export default function ConfirmAdminModal({
         <div className="records-modal-header">
           <h3 className="records-modal-title">Add admin</h3>
           <p className="records-modal-subtitle">
-            {person.first_name} {person.last_name} will be granted the role of {role}.
+            {person.firstName} {person.lastName} will be granted the role of {role}.
           </p>
         </div>
         <div className="records-modal-footer">
@@ -39,3 +39,4 @@ export default function ConfirmAdminModal({
     </div>
   )
 }
+

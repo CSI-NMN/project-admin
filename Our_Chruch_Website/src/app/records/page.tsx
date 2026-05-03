@@ -1,59 +1,85 @@
-'use client'
+﻿'use client'
 
 import './records.css'
-import { Suspense, useEffect, useMemo, useState } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Family, Person } from '@/types/records'
-import { useAppDispatch, useAppSelector } from '@/store/hooks'
-import { deletePerson, updatePerson } from '@/store/slices/recordsSlice'
-import { buildSearchIndex, matchesRecordSearch } from '@/utils/records'
+import { recordsService } from '@/store/api/recordsApi'
 import RecordsSearchSection from '@/components/records/RecordsSearchSection'
 import FamilyDetailsSection from '@/components/records/FamilyDetailsSection'
 import DeleteRecordModal from '@/components/records/DeleteRecordModal'
 import SplitFamilyModal, { SplitModalMode } from '@/components/records/SplitFamilyModal'
+import { showErrorToast, showInfoToast } from '@/components/common/toast'
 
 function AdminRecordsPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const dispatch = useAppDispatch()
-  const families = useAppSelector(state => state.records.families)
+  const [families, setFamilies] = useState<Family[]>([])
 
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<Person[]>([])
   const [selectedFamily, setSelectedFamily] = useState<Family | null>(null)
   const [showTable, setShowTable] = useState(false)
   const [showHierarchyEditor, setShowHierarchyEditor] = useState(false)
-  const [selectedHierarchyPersonIds, setSelectedHierarchyPersonIds] = useState<string[]>([])
-  const [targetFamilyId, setTargetFamilyId] = useState('')
+  const [selectedHierarchyPersonIds, setSelectedHierarchyPersonIds] = useState<number[]>([])
+  const [targetFamilyId, setTargetFamilyId] = useState<number | null>(null)
   const [showSplitModal, setShowSplitModal] = useState(false)
   const [splitModalMode, setSplitModalMode] = useState<SplitModalMode>('choose')
   const [familySearchQuery, setFamilySearchQuery] = useState('')
   const [deleteCandidate, setDeleteCandidate] = useState<Person | null>(null)
 
-  const searchIndex = useMemo(() => buildSearchIndex(families), [families])
+  const selectedFamilyId = selectedFamily?.id
+
   const availableFamilies = useMemo(
     () => families.filter(family => family.id !== selectedFamily?.id),
     [families, selectedFamily?.id]
   )
+
   const selectedHierarchyPeople = useMemo(() => {
     if (!selectedFamily || selectedHierarchyPersonIds.length === 0) return []
     return selectedFamily.members.filter(person => selectedHierarchyPersonIds.includes(person.id))
   }, [selectedFamily, selectedHierarchyPersonIds])
+
   const filteredTargetFamilies = useMemo(() => {
     const query = familySearchQuery.trim().toLowerCase()
     if (!query) return availableFamilies
 
     return availableFamilies.filter(
       family =>
-        family.family_name.toLowerCase().includes(query) ||
-        family.family_code.toLowerCase().includes(query) ||
-        family.id.toLowerCase().includes(query)
+        family.familyName.toLowerCase().includes(query) ||
+        family.familyCode.toLowerCase().includes(query)
     )
   }, [availableFamilies, familySearchQuery])
-  const selectedFamilyId = selectedFamily?.id || ''
+
+  const fetchFamilies = useCallback(async () => {
+    const data = await recordsService.listFamilies({
+      $top: 1000,
+      $skip: 0,
+    })
+    setFamilies(data)
+  }, [])
+
+  const closeSplitModal = () => {
+    setShowSplitModal(false)
+    setSplitModalMode('choose')
+    setFamilySearchQuery('')
+    setTargetFamilyId('')
+  }
+
+  const resetHierarchyState = () => {
+    setSelectedHierarchyPersonIds([])
+    closeSplitModal()
+  }
 
   useEffect(() => {
-    const familyId = searchParams.get('familyId')
+    fetchFamilies().catch(() => {
+      setFamilies([])
+    })
+  }, [fetchFamilies])
+
+  useEffect(() => {
+    const familyIdParam = searchParams.get('familyId')
+    const familyId = familyIdParam ? Number(familyIdParam) : null
     if (!familyId) return
 
     const family = families.find(f => f.id === familyId)
@@ -70,39 +96,79 @@ function AdminRecordsPageContent() {
     setSelectedFamily(refreshedFamily)
   }, [families, selectedFamilyId])
 
-  const closeSplitModal = () => {
-    setShowSplitModal(false)
-    setSplitModalMode('choose')
-    setFamilySearchQuery('')
-    setTargetFamilyId('')
-  }
+  useEffect(() => {
+    const query = searchQuery.trim()
+    if (!query) {
+      setSearchResults([])
+      return
+    }
 
-  const resetHierarchyState = () => {
-    setSelectedHierarchyPersonIds([])
-    closeSplitModal()
-  }
+    let active = true
+    const numericQuery = query.replace(/\D/g, '')
+    const normalizedQuery = query.toLowerCase()
+    const familyIdQuery = /^\d+$/.test(query) ? Number(query) : undefined
+
+    recordsService
+      .searchFamilies({
+        familyId: familyIdQuery,
+        familyCode: query,
+        memberNo: query,
+        memberName: query,
+        phoneNumber: query,
+        aadhaarNumber: query,
+        $top: 300,
+        $skip: 0,
+      })
+      .then(results => {
+        if (!active) return
+
+        const flattened = results
+          .flatMap(family =>
+            family.members
+              .filter(member => {
+                const fullName = `${member.firstName} ${member.lastName || ''}`.toLowerCase()
+                const subscription = String(member.memberNo || '').toLowerCase()
+                const subscriptionName = (member.membershipName || '').toLowerCase()
+                const phone = (member.mobileNo || '').toLowerCase()
+                const phoneDigits = phone.replace(/\D/g, '')
+                const aadhaar = (member.aadhaarNumber || '').toLowerCase()
+
+                return (
+                  fullName.includes(normalizedQuery) ||
+                  subscriptionName.includes(normalizedQuery) ||
+                  subscription.includes(normalizedQuery) ||
+                  phone.includes(normalizedQuery) ||
+                  aadhaar.includes(normalizedQuery) ||
+                  String(family.id) === normalizedQuery ||
+                  family.familyCode.toLowerCase().includes(normalizedQuery) ||
+                  (numericQuery.length > 0 && phoneDigits.includes(numericQuery))
+                )
+              })
+              .map(member => ({ ...member, familyId: family.id }))
+          )
+          .sort((a, b) => `${a.firstName} ${a.lastName || ''}`.localeCompare(`${b.firstName} ${b.lastName || ''}`))
+
+        setSearchResults(flattened)
+      })
+      .catch(() => {
+        if (!active) return
+        setSearchResults([])
+      })
+
+    return () => {
+      active = false
+    }
+  }, [searchQuery])
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     const query = event.target.value
     setSearchQuery(query)
 
-    const normalizedQuery = query.trim().toLowerCase()
-    const numericQuery = query.replace(/\D/g, '')
-
-    if (!normalizedQuery) {
+    if (!query.trim()) {
       setSearchResults([])
       setSelectedFamily(null)
       setShowTable(false)
-      return
     }
-
-    const results = searchIndex
-      .filter(entry => matchesRecordSearch(entry, normalizedQuery, numericQuery))
-      .map(entry => entry.person)
-
-    setSearchResults(results)
-    setSelectedFamily(null)
-    setShowTable(false)
   }
 
   const handleClearSearch = () => {
@@ -112,10 +178,25 @@ function AdminRecordsPageContent() {
     setShowTable(false)
   }
 
-  const handleSelectRecord = (person: Person) => {
-    const family = families.find(f => f.id === person.familyId)
-    setSelectedFamily(family || null)
-    setShowTable(true)
+  const handleSelectRecord = async (person: Person) => {
+    let family = families.find(f => f.id === person.familyId) || null
+
+    if (!family) {
+      try {
+        family = await recordsService.getFamilyById(person.familyId)
+        setFamilies(prev => {
+          if (prev.some(item => item.id === family?.id)) {
+            return prev
+          }
+          return family ? [...prev, family] : prev
+        })
+      } catch {
+        family = null
+      }
+    }
+
+    setSelectedFamily(family)
+    setShowTable(Boolean(family))
   }
 
   const handleCreateNewRecord = () => {
@@ -130,8 +211,9 @@ function AdminRecordsPageContent() {
     router.push('/records')
   }
 
-  const handleEditPerson = (personId: string) => {
-    router.push(`/records/edit?id=${personId}`)
+  const handleEditPerson = (personId: number) => {
+    if (!selectedFamily?.id) return
+    router.push(`/records/edit?familyId=${selectedFamily.id}&id=${personId}`)
   }
 
   const handleEditFamily = () => {
@@ -173,7 +255,7 @@ function AdminRecordsPageContent() {
 
   const handleCreateNewFamilyFromHierarchy = () => {
     if (selectedHierarchyPersonIds.length === 0) {
-      alert('Select at least one person first from the records table.')
+      showInfoToast('Select at least one person first from the records table.')
       return
     }
 
@@ -182,27 +264,30 @@ function AdminRecordsPageContent() {
     router.push(`/records/create?movePersonIds=${movePersonIds}`)
   }
 
-  const handleMoveToDifferentFamily = () => {
-    if (selectedHierarchyPersonIds.length === 0 || !targetFamilyId) {
-      alert('Select one or more people and a target family.')
+  const handleMoveToDifferentFamily = async () => {
+    if (selectedHierarchyPersonIds.length === 0 || targetFamilyId == null) {
+      showInfoToast('Select one or more people and a target family.')
       return
     }
 
-    selectedHierarchyPersonIds.forEach(personId => {
-      dispatch(
-        updatePerson({
-          personId,
-          data: { familyId: targetFamilyId },
-        })
+    try {
+      await Promise.all(
+        selectedHierarchyPersonIds.map(personId =>
+          recordsService.moveFamilyMember(personId, targetFamilyId)
+        )
       )
-    })
 
-    setShowHierarchyEditor(false)
-    resetHierarchyState()
-    router.push(`/records?familyId=${targetFamilyId}`)
+      await fetchFamilies()
+      setShowHierarchyEditor(false)
+      resetHierarchyState()
+      router.push(`/records?familyId=${targetFamilyId}`)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to move person'
+      showErrorToast(message)
+    }
   }
 
-  const handleSelectHierarchyPerson = (personId: string) => {
+  const handleSelectHierarchyPerson = (personId: number) => {
     setSelectedHierarchyPersonIds(prev =>
       prev.includes(personId) ? prev.filter(id => id !== personId) : [...prev, personId]
     )
@@ -213,12 +298,18 @@ function AdminRecordsPageContent() {
     setDeleteCandidate(person)
   }
 
-  const handleConfirmDelete = () => {
-    if (!deleteCandidate) return
+  const handleConfirmDelete = async () => {
+    if (!deleteCandidate || !selectedFamily?.id) return
 
-    dispatch(deletePerson({ personId: deleteCandidate.id }))
-    setSelectedHierarchyPersonIds(prev => prev.filter(id => id !== deleteCandidate.id))
-    setDeleteCandidate(null)
+    try {
+      await recordsService.deleteFamilyMember(selectedFamily.id, deleteCandidate.id)
+      await fetchFamilies()
+      setSelectedHierarchyPersonIds(prev => prev.filter(id => id !== deleteCandidate.id))
+      setDeleteCandidate(null)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to delete person'
+      showErrorToast(message)
+    }
   }
 
   return (

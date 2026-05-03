@@ -1,0 +1,149 @@
+.subscriptions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.subscriptions-subtitle {
+  color: #4b5563;
+  font-size: 0.9rem;
+}
+
+.subscriptions-search-card {
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.subscriptions-search-row {
+  display: block;
+}
+
+.subscriptions-result-list {
+  margin-top: 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.25rem;
+  max-height: 16rem;
+  overflow: auto;
+}
+
+.subscriptions-result-item {
+  width: 100%;
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.subscriptions-result-item:last-child {
+  border-bottom: none;
+}
+
+.subscriptions-result-item:hover {
+  background: #fff7ed;
+}
+
+.subscriptions-grid-card {
+  padding: 1rem;
+}
+
+.subscriptions-card-meta {
+  margin-bottom: 0.75rem;
+  color: #374151;
+}
+
+.subscriptions-card-meta-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.subscriptions-year-select {
+  max-width: 18rem;
+}
+
+.subscriptions-save-info {
+  color: #d97706;
+  font-weight: 600;
+}
+
+.subscriptions-table-wrap {
+  overflow-x: auto;
+}
+
+.subscriptions-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 64rem;
+}
+
+.subscriptions-table th,
+.subscriptions-table td {
+  border: 1px solid #7ec6d6;
+  padding: 0.4rem;
+  font-size: 0.85rem;
+}
+
+.subscriptions-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #f59e0b;
+  color: #ffffff;
+}
+
+.subscriptions-cell-input {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 0.2rem;
+  padding: 0.25rem 0.35rem;
+}
+
+.subscriptions-total-row td {
+  background: #fef3c7;
+  font-weight: 700;
+}
+
+.subscriptions-footer {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.subscriptions-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.subscriptions-audit-wrap {
+  overflow-x: auto;
+}
+
+.subscriptions-audit-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 52rem;
+}
+
+.subscriptions-audit-table th,
+.subscriptions-audit-table td {
+  border: 1px solid #e5e7eb;
+  padding: 0.45rem 0.55rem;
+  font-size: 0.82rem;
+  text-align: left;
+}
+
+.subscriptions-audit-table thead th {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+@media (max-width: 768px) {
+  .subscriptions-card-meta-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

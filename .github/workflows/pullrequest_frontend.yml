@@ -1,7 +1,13 @@
 name: Frontend PR Build Check
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   pull_request:
+    paths:
+      - "Our_Chruch_Website/**"
 
 jobs:
   frontend-build:

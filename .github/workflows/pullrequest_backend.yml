@@ -1,0 +1,14 @@
+name: Backend PR Build Check
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    paths:
+      - "backend/**"
+
+jobs:
+  backend-build:
+    uses: ./.github/workflows/backend_build.yml
