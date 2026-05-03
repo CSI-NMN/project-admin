@@ -1,6 +1,5 @@
 package org.church.backend.common.entity;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
@@ -17,11 +16,11 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "event_audit_items")
+@Table(name = "subscription_audit_items")
 @Getter
 @Setter
 @NoArgsConstructor
-public class EventAuditItem {
+public class SubscriptionAuditItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,24 +30,21 @@ public class EventAuditItem {
     private LocalDateTime createdAt;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "\"eventId\"", nullable = false)
-    private Event event;
+    @JoinColumn(name = "\"subscriptionId\"", nullable = false)
+    private Subscription subscription;
 
-    @Column(name = "\"type\"", nullable = false, length = 20)
+    @Column(name = "\"type\"", nullable = false, length = 40)
     private String type;
 
-    @Column(name = "\"description\"", nullable = false, columnDefinition = "TEXT")
-    private String description;
+    @Column(name = "\"month\"", length = 10)
+    private String month;
 
-    @Column(name = "\"amount\"", precision = 12, scale = 2)
-    private BigDecimal amount;
+    @Column(name = "\"fieldName\"", nullable = false, length = 120)
+    private String fieldName;
 
-    @Column(name = "\"itemName\"", length = 200)
-    private String itemName;
+    @Column(name = "\"oldValue\"", columnDefinition = "TEXT")
+    private String oldValue;
 
-    @Column(name = "\"quantity\"", precision = 12, scale = 2)
-    private BigDecimal quantity;
-
-    @Column(name = "\"unit\"", length = 50)
-    private String unit;
+    @Column(name = "\"newValue\"", columnDefinition = "TEXT")
+    private String newValue;
 }

@@ -1,11 +1,12 @@
 import { apiRequest } from '@/store/api/baseApi'
 import {
+  ApiSubscriptionAuditItemResponse,
   ApiSubscriptionCardResponse,
   ApiSubscriptionFinancialYearResponse,
   ODataCollectionResponse,
 } from '@/types/api'
 import { Family, Person } from '@/types/records'
-import { SubscriptionCard, SubscriptionFinancialYear, SubscriptionTableState } from '@/types/subscriptions'
+import { SubscriptionAuditItem, SubscriptionCard, SubscriptionFinancialYear, SubscriptionTableState } from '@/types/subscriptions'
 
 const CATEGORY_KEYS = [
   'subscriptionOffering',
@@ -70,6 +71,16 @@ const mapCard = (card: ApiSubscriptionCardResponse): SubscriptionCard => ({
   totalAmount: Number(card.totalAmount || 0),
   lastSavedAt: card.lastSavedAt || undefined,
   table: parseTablePayload(card.cardPayload),
+})
+
+const mapAuditItem = (item: ApiSubscriptionAuditItemResponse): SubscriptionAuditItem => ({
+  id: item.id,
+  createdAt: item.createdAt,
+  type: item.type,
+  month: item.month || undefined,
+  fieldName: item.fieldName,
+  oldValue: item.oldValue || undefined,
+  newValue: item.newValue || undefined,
 })
 
 export const subscriptionsService = {
@@ -149,6 +160,13 @@ export const subscriptionsService = {
       },
     })
     return mapCard(payload)
+  },
+
+  async getAuditTrail(personId: number, financialYearId: number): Promise<SubscriptionAuditItem[]> {
+    const payload = await apiRequest<ApiSubscriptionAuditItemResponse[]>('/odata/Subscriptions/audit', {
+      query: { personId, financialYearId },
+    })
+    return payload.map(mapAuditItem)
   },
 
   async updateFamilyContributions(input: {

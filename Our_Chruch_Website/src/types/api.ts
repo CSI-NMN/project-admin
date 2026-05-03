@@ -74,18 +74,58 @@ export interface ApiSubscriptionFinancialYearResponse {
   active: boolean
 }
 
-export interface ApiSubscriptionCardResponse {
+export interface ApiSubscriptionAuditItemResponse {
+  id: number
+  createdAt: string
+  type: string
+  month: string | null
+  fieldName: string
+  oldValue: string | null
+  newValue: string | null
+}
+
+export interface ApiTallyResponse {
   id: number | null
-  personId: number
-  familyId: number
-  personName: string
-  familyName: string
-  memberNo: string | null
   financialYearId: number
-  financialYearLabel: string
-  status: 'DRAFT' | 'SUBMITTED'
-  isLocked: boolean
-  totalAmount: number
+  month: string
+  incomePayload: string
+  expensePayload: string
+  totalIncome: number
+  totalExpense: number
   lastSavedAt: string | null
-  cardPayload: string
+}
+
+export interface ApiEventAuditEventResponse {
+  id: number
+  name: string
+  startDate: string
+  endDate: string
+  status: 'LIVE' | 'PAST'
+  live: boolean
+  description: string | null
+  createdAt: string
+  recordCount: number
+}
+
+export interface ApiEventAuditRecordResponse {
+  id: number
+  type: 'DECISION' | 'PURCHASE' | 'INCOME' | 'EXPENSE'
+  description: string
+  amount: number | null
+  itemName: string | null
+  quantity: number | null
+  unit: string | null
+  createdAt: string
+}
+
+export interface ApiEventAuditEventDetailResponse {
+  id: number
+  name: string
+  startDate: string
+  endDate: string
+  status: 'LIVE' | 'PAST'
+  live: boolean
+  description: string | null
+  createdAt: string
+  records: ApiEventAuditRecordResponse[]
 }

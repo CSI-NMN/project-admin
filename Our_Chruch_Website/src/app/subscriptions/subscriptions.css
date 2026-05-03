@@ -118,6 +118,29 @@
   justify-content: flex-end;
 }
 
+.subscriptions-audit-wrap {
+  overflow-x: auto;
+}
+
+.subscriptions-audit-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 52rem;
+}
+
+.subscriptions-audit-table th,
+.subscriptions-audit-table td {
+  border: 1px solid #e5e7eb;
+  padding: 0.45rem 0.55rem;
+  font-size: 0.82rem;
+  text-align: left;
+}
+
+.subscriptions-audit-table thead th {
+  background: #f3f4f6;
+  color: #111827;
+}
+
 @media (max-width: 768px) {
   .subscriptions-card-meta-top {
     flex-direction: column;

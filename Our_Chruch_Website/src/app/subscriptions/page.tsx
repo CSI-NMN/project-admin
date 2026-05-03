@@ -6,7 +6,8 @@ import { showErrorToast, showInfoToast, showSuccessToast } from '@/components/co
 import { recordsService } from '@/store/api/recordsApi'
 import { subscriptionsService } from '@/store/api/subscriptionsApi'
 import { Person } from '@/types/records'
-import { SubscriptionCard, SubscriptionCategoryKey, SubscriptionFinancialYear, SubscriptionTableState } from '@/types/subscriptions'
+import { SubscriptionAuditItem, SubscriptionCard, SubscriptionCategoryKey, SubscriptionFinancialYear, SubscriptionTableState } from '@/types/subscriptions'
+import { useAutoSave } from '@/hooks/useAutoSave'
 
 const CATEGORY_ROWS: Array<{ key: SubscriptionCategoryKey; label: string }> = [
   { key: 'subscriptionOffering', label: 'சந்தா காணிக்கை' },
@@ -29,6 +30,12 @@ const parseAmount = (value: string): number => {
   return Number.isFinite(amount) ? amount : 0
 }
 
+const getTodayIsoDate = () => {
+  const now = new Date()
+  const tzOffsetMs = now.getTimezoneOffset() * 60_000
+  return new Date(now.getTime() - tzOffsetMs).toISOString().slice(0, 10)
+}
+
 export default function SubscriptionsPage() {
   const months = subscriptionsService.months
 
@@ -40,8 +47,9 @@ export default function SubscriptionsPage() {
   const [selectedYearId, setSelectedYearId] = useState<number | null>(null)
   const [card, setCard] = useState<SubscriptionCard | null>(null)
   const [table, setTable] = useState<SubscriptionTableState>(subscriptionsService.createEmptyTable())
+  const [auditItems, setAuditItems] = useState<SubscriptionAuditItem[]>([])
   const [isDirty, setIsDirty] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
+  const [isManualSaving, setIsManualSaving] = useState(false)
   const [isCardLoading, setIsCardLoading] = useState(false)
   const [lastSavedAt, setLastSavedAt] = useState<string>('')
 
@@ -116,7 +124,6 @@ export default function SubscriptionsPage() {
 
   const saveDraft = useCallback(async () => {
     if (!isDirty || !card || !selectedYearId) return
-    setIsSaving(true)
     try {
       const saved = await subscriptionsService.saveCard({
         personId: card.personId,
@@ -129,10 +136,10 @@ export default function SubscriptionsPage() {
       setCard(saved)
       setLastSavedAt(saved.lastSavedAt || '')
       setIsDirty(false)
+      const audit = await subscriptionsService.getAuditTrail(saved.personId, selectedYearId)
+      setAuditItems(audit)
     } catch {
       showErrorToast('Auto-save failed. Please check your network.')
-    } finally {
-      setIsSaving(false)
     }
   }, [isDirty, card, selectedYearId, table, grandTotal])
 
@@ -142,6 +149,8 @@ export default function SubscriptionsPage() {
     setTable(loaded.table)
     setIsDirty(false)
     setLastSavedAt(loaded.lastSavedAt || '')
+    const audit = await subscriptionsService.getAuditTrail(personId, financialYearId)
+    setAuditItems(audit)
   }
 
   useEffect(() => {
@@ -156,13 +165,11 @@ export default function SubscriptionsPage() {
       })
   }, [selectedPerson, selectedYearId])
 
-  useEffect(() => {
-    if (!isDirty || !card || !selectedYearId) return
-    const timer = window.setTimeout(() => {
-      void saveDraft()
-    }, 60_000)
-    return () => window.clearTimeout(timer)
-  }, [isDirty, card, selectedYearId, table, saveDraft])
+  const { isSaving } = useAutoSave({
+    isDirty,
+    data: { card, selectedYearId, table, grandTotal },
+    saveFn: saveDraft,
+  })
 
   const updateCell = (month: string, key: SubscriptionCategoryKey, value: string) => {
     if (!canEdit) return
@@ -174,6 +181,10 @@ export default function SubscriptionsPage() {
           ...prev.valuesByMonth[month],
           [key]: value,
         },
+      },
+      datesByMonth: {
+        ...prev.datesByMonth,
+        [month]: prev.datesByMonth[month] || getTodayIsoDate(),
       },
     }))
     setIsDirty(true)
@@ -190,7 +201,7 @@ export default function SubscriptionsPage() {
 
   const handleSubmit = async () => {
     if (!card || !selectedYearId) return
-    setIsSaving(true)
+    setIsManualSaving(true)
     try {
       const saved = await subscriptionsService.saveCard({
         personId: card.personId,
@@ -203,17 +214,19 @@ export default function SubscriptionsPage() {
       setCard(saved)
       setIsDirty(false)
       setLastSavedAt(saved.lastSavedAt || '')
+      const audit = await subscriptionsService.getAuditTrail(saved.personId, selectedYearId)
+      setAuditItems(audit)
       showSuccessToast('Subscription card submitted successfully.')
     } catch {
       showErrorToast('Unable to submit subscription card.')
     } finally {
-      setIsSaving(false)
+      setIsManualSaving(false)
     }
   }
 
   const handleFamilyBulkUpdate = async () => {
     if (!card || !selectedYearId) return
-    setIsSaving(true)
+    setIsManualSaving(true)
     try {
       const updatedCount = await subscriptionsService.updateFamilyContributions({
         familyId: card.familyId,
@@ -221,11 +234,13 @@ export default function SubscriptionsPage() {
         table,
         totalAmount: grandTotal,
       })
+      const audit = await subscriptionsService.getAuditTrail(card.personId, selectedYearId)
+      setAuditItems(audit)
       showSuccessToast(`Updated ${updatedCount} family member card(s).`)
     } catch {
       showErrorToast('Unable to update family contributions.')
     } finally {
-      setIsSaving(false)
+      setIsManualSaving(false)
     }
   }
 
@@ -347,7 +362,7 @@ export default function SubscriptionsPage() {
                 <strong>Financial Year:</strong> {card.financialYearLabel} | <strong>Status:</strong> {card.status}
               </p>
               <p className="subscriptions-save-info">
-                {isSaving ? 'Saving...' : 'Saved'} {lastSavedAt ? `at ${new Date(lastSavedAt).toLocaleString()}` : ''}
+                {isSaving || isManualSaving ? 'Saving...' : 'Saved'} {lastSavedAt ? `at ${new Date(lastSavedAt).toLocaleString()}` : ''}
               </p>
             </div>
 
@@ -404,14 +419,54 @@ export default function SubscriptionsPage() {
 
             <div className="subscriptions-footer">
               <div className="subscriptions-actions">
-                <button className="app-btn-secondary" onClick={handleFamilyBulkUpdate} disabled={!card || isSaving}>
+                <button className="app-btn-secondary" onClick={handleFamilyBulkUpdate} disabled={!card || isSaving || isManualSaving}>
                   Update Family Contributions
                 </button>
-                <button className="app-btn-primary" onClick={handleSubmit} disabled={!card || isSaving || !canEdit}>
+                <button className="app-btn-primary" onClick={handleSubmit} disabled={!card || isSaving || isManualSaving || !canEdit}>
                   Submit
                 </button>
               </div>
             </div>
+          </div>
+        )}
+
+        {card && selectedYearId && (
+          <div className="app-card subscriptions-grid-card">
+            <div className="subscriptions-card-meta">
+              <p>
+                <strong>Audit Log</strong>
+              </p>
+            </div>
+            {auditItems.length === 0 ? (
+              <p className="app-empty-text">No audit entries yet for this person and financial year.</p>
+            ) : (
+              <div className="subscriptions-audit-wrap">
+                <table className="subscriptions-audit-table">
+                  <thead>
+                    <tr>
+                      <th>Time</th>
+                      <th>Type</th>
+                      <th>Month</th>
+                      <th>Field</th>
+                      <th>Old</th>
+                      <th>New</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {auditItems.map(item => (
+                      <tr key={item.id}>
+                        <td>{new Date(item.createdAt).toLocaleString()}</td>
+                        <td>{item.type}</td>
+                        <td>{item.month || '-'}</td>
+                        <td>{item.fieldName}</td>
+                        <td>{item.oldValue || '-'}</td>
+                        <td>{item.newValue || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
       </div>

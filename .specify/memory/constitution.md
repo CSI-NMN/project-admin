@@ -1,65 +1,310 @@
-# Project Constitution
+Here is a clean, production-ready **`CONSTITUTION.md`** file tailored for a project using **Spring Boot** and **Next.js**.
+This acts as a **governing document**—developers and AI tools must follow it strictly.
 
-## Purpose
+---
 
-This project manages church operations across frontend and backend with the backend as the source of truth for business data and rules.
+# 📜 CONSTITUTION.md
 
-## Core Rules
+### Project Engineering Guidelines & Standards
 
-1. Backend is the source of truth.
-- Database schema, validation, generated identifiers, derived fields, and business rules must be enforced in backend code.
-- Frontend should adapt to backend contracts, not invent parallel truth.
+---
 
-2. Keep feature structure simple and readable.
-- Prefer one feature service per business area.
-- Avoid creating duplicate services, repositories, or configs that solve the same problem.
-- Shared infrastructure belongs in `backend/src/main/java/org/church/backend/common`.
+## 1. Purpose
 
-3. Use the common repository layer for generic persistence behavior.
-- Generic CRUD and audit handling should stay centralized.
-- New entities should not require repository boilerplate unless they need special behavior.
+This document defines the **non-negotiable engineering principles, architecture rules, and development standards** for this project.
 
-4. Generated and derived fields are backend-owned.
-- IDs, timestamps, generated codes, and derived relationship fields must not be manually entered by the UI.
-- Frontend may display these fields, but should not own them.
+All contributors (developers, reviewers, automation tools, AI agents) **must comply** with this constitution when implementing or modifying features.
 
-5. UI models must reflect backend models closely.
-- If backend changes a contract, frontend types and API mapping must be updated in the same change.
-- Avoid duplicate model definitions with conflicting meaning.
+---
 
-6. OData endpoints should be reused where practical.
-- Prefer expressive query/filter endpoints over creating many narrow endpoints.
-- Create dedicated endpoints only when feature logic cannot be represented cleanly through standard querying.
+## 2. Core Principles
 
-7. Meaningful feature work must be spec-backed.
-- Large feature changes should update or add a spec under `.specify/specs`.
-- Specs must describe behavior, data model, ownership, and API expectations.
+### 2.1 Consistency Over Innovation
 
-8. Feature file changes must keep feature documentation in sync.
-- If any meaningful change is made to files for a feature, the related markdown spec for that feature must be updated in the same work.
-- If a feature does not yet have a markdown spec, create one under `.specify/specs`.
-- Code changes should not be considered complete until the matching feature markdown is created or updated.
+- Follow existing patterns strictly
+- Do not introduce new architectural styles unless explicitly approved
+- Reuse existing modules, utilities, and services
 
-## Records Principles
+### 2.2 Separation of Concerns
 
-1. `familyCode` is backend-generated.
-2. `familyHeadId` is backend-derived from the current head person.
-3. Person creation may optionally create a linked membership entry.
-4. Aadhaar uniqueness is enforced in backend and database.
-5. Address fields follow this structure:
-- `address1`
-- `area`
-- `address2`
-- `pincode`
-- `city`
-- `state`
+- Backend handles business logic and persistence
+- Frontend handles UI and interaction
+- No cross-layer leakage of responsibilities
 
-## Documentation Standard
+### 2.3 Maintainability First
 
-Each feature spec should include:
-- Scope
-- Data model
-- Backend responsibilities
-- Frontend responsibilities
-- API contract
-- Deferred or open items
+- Code must be readable, predictable, and testable
+- Avoid unnecessary abstraction or over-engineering
+
+---
+
+## 3. Architecture Rules
+
+### 3.1 System Structure
+
+- Frontend: Next.js (UI Layer)
+- Backend: Spring Boot (API Layer)
+- Communication: REST (JSON)
+
+---
+
+### 3.2 Backend Layering (STRICT)
+
+Every feature must follow:
+
+```id="arch1"
+Controller → Service → Repository → Database
+```
+
+#### Rules:
+
+- Controllers:
+  - Only handle request/response
+  - No business logic
+
+- Services:
+  - Contain all business logic
+  - Act as the single source of truth
+
+- Repositories:
+  - Only data access
+  - No logic
+
+---
+
+### 3.3 Frontend Layering (STRICT)
+
+```id="arch2"
+UI Components → Hooks → Services → API
+```
+
+#### Rules:
+
+- Components:
+  - Pure UI logic
+
+- Hooks:
+  - State and reusable logic
+
+- Services:
+  - API communication only
+
+---
+
+## 4. Coding Standards
+
+### 4.1 Backend (Spring Boot)
+
+- Use DTOs for all API communication
+- Never expose entity classes directly
+- Use `@Valid` for validation
+- Use global exception handling (`@ControllerAdvice`)
+- Follow REST conventions:
+
+| Action | Method | Endpoint            |
+| ------ | ------ | ------------------- |
+| Create | POST   | /api/v1/events      |
+| Read   | GET    | /api/v1/events      |
+| Update | PUT    | /api/v1/events/{id} |
+| Delete | DELETE | /api/v1/events/{id} |
+
+---
+
+### 4.2 Frontend (Next.js)
+
+- Centralize API calls in `/services`
+- Avoid direct API calls inside components
+- Use environment variables for configuration
+- Maintain reusable UI components
+
+---
+
+## 5. Data & API Rules
+
+- All APIs must:
+  - Use JSON
+  - Return consistent response structure
+
+### Standard Response Format
+
+```json id="resp1"
+{
+  "data": {},
+  "message": "Success",
+  "status": 200
+}
+```
+
+### Error Format
+
+```json id="resp2"
+{
+  "message": "Error description",
+  "status": 400,
+  "timestamp": "ISO_DATE"
+}
+```
+
+---
+
+## 6. Feature Development Rules
+
+Before implementing any feature:
+
+1. Analyze existing code structure
+2. Identify similar implementations
+3. Reuse patterns and utilities
+4. Extend—not duplicate—logic
+
+---
+
+### 6.1 Event Audit Feature Rules
+
+- Event status is derived from date (NOT manually set)
+
+- Live Event:
+  - Editable
+  - Deletable
+
+- Past Event:
+  - Read-only
+
+- Must support:
+  - Decisions
+  - Purchases
+  - Expenses & Income
+
+- Backend enforces rules
+
+- Frontend reflects rules (disable UI actions)
+
+---
+
+## 7. Validation Rules
+
+- Backend validation is mandatory
+- Frontend validation is supportive (not primary)
+- Never trust client-side validation alone
+
+---
+
+## 8. Security Guidelines
+
+- Do not expose sensitive data
+- Use authentication (JWT recommended)
+- Validate all inputs
+- Prevent unauthorized modifications
+
+---
+
+## 9. Code Review Rules
+
+Every PR must ensure:
+
+- Follows existing structure
+- No duplicate logic
+- Proper error handling
+- Clean and readable code
+- No unused code or dead logic
+
+---
+
+## 10. Prohibited Practices
+
+- ❌ Business logic inside controllers
+- ❌ Direct database calls from controllers
+- ❌ API calls directly in UI components
+- ❌ Hardcoded values (URLs, configs)
+- ❌ Breaking existing patterns
+
+---
+
+## 11. Versioning Rules
+
+- All APIs must be versioned:
+
+  ```
+  /api/v1/
+  ```
+
+- Breaking changes require version bump
+
+---
+
+## 12. Documentation Requirements
+
+Every feature must include:
+
+- Clear description
+- API details
+- Data model updates
+- Edge cases handled
+
+---
+
+## 13. Future-Proofing
+
+Design must consider:
+
+- Scalability
+- Extensibility
+- Backward compatibility
+
+---
+
+## 14. Enforcement
+
+This constitution is **mandatory**.
+
+Any code that violates these rules:
+
+- Must be rejected in review
+- Must be refactored before merge
+
+---
+
+## 15. Guiding Rule
+
+> “Follow the system, not personal preference.”
+
+---
+
+## 16. Spec Synchronization Rule (MANDATORY)
+
+- Every feature MUST have a corresponding spec file in `/specs/`
+- Any change to a feature REQUIRES updating its spec file
+
+### Rules:
+
+- ❌ Code must NOT be merged if spec is outdated
+- ❌ Feature implementation without spec is NOT allowed
+- ✅ Spec must reflect:
+  - Data model
+  - API changes
+  - Business logic
+
+### Enforcement:
+
+- PR must include spec update
+- Reviewer must verify spec accuracy
+
+---
+
+## 17. Naming Convention Rule (STRICT)
+
+Across entire system:
+
+- Allowed:
+  - camelCase → variables, JSON, DB columns
+  - PascalCase → classes, components
+
+- Not Allowed:
+  - snake_case
+  - kebab-case (except URLs if needed)
+
+This applies to:
+
+- Database schema
+- Backend code
+- Frontend code
+- API contracts

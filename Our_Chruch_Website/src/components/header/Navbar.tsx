@@ -14,6 +14,8 @@ const tabs: Tab[] = [
   { key: 'home', label: 'Home', href: '/' },
   { key: 'records', label: 'Records', href: '/records' },
   { key: 'subscriptions', label: 'Subscriptions', href: '/subscriptions' },
+  { key: 'eventAudit', label: 'Event Audit', href: '/event-audit' },
+  { key: 'tally', label: 'Tally', href: '/tally' },
   { key: 'celebrations', label: 'Celebrations', href: '/celebrations' },
   { key: 'filter', label: 'Filter', href: '/filter' },
   { key: 'admin', label: 'Admin', href: '/admin' },

@@ -14,6 +14,7 @@ export type SubscriptionCategoryKey =
 export interface SubscriptionTableState {
   valuesByMonth: Record<string, Record<SubscriptionCategoryKey, string>>
   datesByMonth: Record<string, string>
+  treasurerSignature: string
 }
 
 export interface SubscriptionFinancialYear {
@@ -38,4 +39,14 @@ export interface SubscriptionCard {
   totalAmount: number
   lastSavedAt?: string
   table: SubscriptionTableState
+}
+
+export interface SubscriptionAuditItem {
+  id: number
+  createdAt: string
+  type: string
+  month?: string
+  fieldName: string
+  oldValue?: string
+  newValue?: string
 }
