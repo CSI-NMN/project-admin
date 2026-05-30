@@ -74,6 +74,22 @@ export interface ApiSubscriptionFinancialYearResponse {
   active: boolean
 }
 
+export interface ApiSubscriptionCardResponse {
+  id: number | null
+  personId: number
+  familyId: number
+  personName: string
+  familyName: string
+  memberNo: string | null
+  financialYearId: number
+  financialYearLabel: string
+  status: 'DRAFT' | 'SUBMITTED'
+  isLocked: boolean
+  totalAmount: number
+  lastSavedAt: string | null
+  cardPayload: string
+}
+
 export interface ApiSubscriptionAuditItemResponse {
   id: number
   createdAt: string

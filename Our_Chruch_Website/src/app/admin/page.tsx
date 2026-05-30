@@ -82,7 +82,7 @@ export default function AdminPage() {
         return (
           fullName.includes(normalizedQuery) ||
           (person.membershipName || '').toLowerCase().includes(normalizedQuery) ||
-          (person.memberNo || '').toLowerCase().includes(normalizedQuery) ||
+          String(person.memberNo || '').toLowerCase().includes(normalizedQuery) ||
           (person.mobileNo || '').toLowerCase().includes(normalizedQuery) ||
           (person.email || '').toLowerCase().includes(normalizedQuery)
         )
@@ -112,9 +112,9 @@ export default function AdminPage() {
 
     dispatch(
       addAdmin({
-        id: `admin-${Date.now()}`,
+        id: Date.now(),
         personId: selectedPerson.id,
-        memberId: selectedPerson.membershipName || selectedPerson.memberNo || '',
+        memberId: selectedPerson.memberNo || null,
         name: `${selectedPerson.firstName} ${selectedPerson.lastName}`,
         email: selectedPerson.email || '',
         role: selectedRole,

@@ -20,7 +20,7 @@ const getInitialState = (initialData?: Partial<Person>): Partial<Person> => ({
   isHead: false,
   createSubscription: false,
   subscriptionName: '',
-  familyId: '',
+  familyId: undefined,
   ...initialData,
 })
 
@@ -79,7 +79,7 @@ export default function RecordsForm({
 
     const changedPayload: Partial<Person> = {}
     const base = initialData || {}
-    const fields = Object.keys(payload) as (keyof Person)[]
+    const fields = Object.keys(payload) as (keyof typeof payload)[]
 
     fields.forEach(field => {
       const currentValue = payload[field]
@@ -91,7 +91,7 @@ export default function RecordsForm({
         typeof previousValue === 'string' && previousValue.trim() === '' ? undefined : previousValue
 
       if (normalizedCurrent !== normalizedPrevious) {
-        changedPayload[field] = currentValue
+        ;(changedPayload as any)[field] = currentValue
       }
     })
 

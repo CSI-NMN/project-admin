@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import './records.css'
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
@@ -63,7 +63,7 @@ function AdminRecordsPageContent() {
     setShowSplitModal(false)
     setSplitModalMode('choose')
     setFamilySearchQuery('')
-    setTargetFamilyId('')
+    setTargetFamilyId(null)
   }
 
   const resetHierarchyState = () => {
@@ -250,7 +250,7 @@ function AdminRecordsPageContent() {
     setShowSplitModal(true)
     setSplitModalMode('choose')
     setFamilySearchQuery('')
-    setTargetFamilyId('')
+    setTargetFamilyId(null)
   }
 
   const handleCreateNewFamilyFromHierarchy = () => {
@@ -291,7 +291,7 @@ function AdminRecordsPageContent() {
     setSelectedHierarchyPersonIds(prev =>
       prev.includes(personId) ? prev.filter(id => id !== personId) : [...prev, personId]
     )
-    setTargetFamilyId('')
+    setTargetFamilyId(null)
   }
 
   const handleDeleteRequest = (person: Person) => {

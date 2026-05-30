@@ -51,7 +51,7 @@ export default function FamilyForm({
 
     const changedPayload: Partial<Family> = {}
     const base = initialData || {}
-    const fields = Object.keys(payload) as (keyof Family)[]
+    const fields = Object.keys(payload) as (keyof typeof payload)[]
 
     fields.forEach(field => {
       const currentValue = payload[field]
@@ -63,7 +63,7 @@ export default function FamilyForm({
         typeof previousValue === 'string' && previousValue.trim() === '' ? undefined : previousValue
 
       if (normalizedCurrent !== normalizedPrevious) {
-        changedPayload[field] = currentValue
+        ;(changedPayload as any)[field] = currentValue
       }
     })
 

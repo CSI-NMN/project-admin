@@ -1,6 +1,6 @@
 interface DeleteRecordModalProps {
   deleteCandidate: {
-    id: string
+    id: number
     firstName: string
     lastName?: string
   } | null
