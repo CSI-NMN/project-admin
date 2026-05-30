@@ -1,0 +1,68 @@
+.create-event-shell {
+  padding-top: 1.2rem;
+}
+
+.create-event-card {
+  background: #fff;
+  border: 1px solid #ececec;
+  padding: 1.5rem 2rem 2rem;
+}
+
+.create-event-title {
+  margin: 0 0 1.25rem;
+  font-size: 2.75rem;
+  line-height: 1.1;
+  color: #0f172a;
+  font-weight: 800;
+}
+
+.create-event-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.create-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.create-label {
+  color: #111827;
+  font-weight: 700;
+  font-size: 1.35rem;
+}
+
+.create-help {
+  color: #374151;
+  margin: 0;
+}
+
+.create-dates {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.create-date-input {
+  max-width: 14rem;
+}
+
+.create-actions {
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 900px) {
+  .create-event-card {
+    padding: 1rem;
+  }
+
+  .create-event-title {
+    font-size: 2rem;
+  }
+
+  .create-dates {
+    grid-template-columns: 1fr;
+  }
+}

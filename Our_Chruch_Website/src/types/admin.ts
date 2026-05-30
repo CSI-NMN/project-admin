@@ -1,9 +1,9 @@
 export type AdminRole = 'Church Admin' | 'Chairman' | 'Secretary' | 'Treasurer'
 
 export interface AdminRecord {
-  id: string
-  personId: string
-  memberId: string
+  id: number
+  personId: number
+  memberId: number | null
   name: string
   email: string
   role: AdminRole

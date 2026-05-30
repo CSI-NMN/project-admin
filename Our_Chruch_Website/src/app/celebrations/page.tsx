@@ -1,18 +1,14 @@
 'use client'
 
 import './celebrations.css'
-import { useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import * as XLSX from 'xlsx'
-import { useAppSelector } from '@/store/hooks'
-import { useAppDispatch } from '@/store/hooks'
-import { deletePerson } from '@/store/slices/recordsSlice'
-import { Person } from '@/types/records'
-import CelebrationsFeedTable, {
-  CelebrationFeedItem,
-  CelebrationFeedType,
-} from '@/components/celebrations/CelebrationsFeedTable'
+import { recordsService } from '@/store/api/recordsApi'
+import { CelebrationFeedItem, CelebrationsDto, CelebrationFeedType } from '@/types/records'
+import CelebrationsFeedTable from '@/components/celebrations/CelebrationsFeedTable'
 import DeleteRecordModal from '@/components/records/DeleteRecordModal'
+import { showErrorToast } from '@/components/common/toast'
 
 const MONTHS = [
   'January',
@@ -28,48 +24,6 @@ const MONTHS = [
   'November',
   'December',
 ]
-
-const getMonthAndDay = (value?: string) => {
-  if (!value) return null
-
-  const isoMatch = /^(\d{4})-(\d{2})-(\d{2})/.exec(value)
-  if (isoMatch) {
-    return {
-      month: Number(isoMatch[2]),
-      day: Number(isoMatch[3]),
-    }
-  }
-
-  const parsed = new Date(value)
-  if (Number.isNaN(parsed.getTime())) return null
-
-  return {
-    month: parsed.getMonth() + 1,
-    day: parsed.getDate(),
-  }
-}
-
-const buildCelebrationItem = (
-  personId: string,
-  name: string,
-  familyName: string,
-  familyCode: string,
-  day: number,
-  month: number,
-  mobile: string | undefined,
-  email: string | undefined,
-  suffix: string
-): CelebrationFeedItem => ({
-  id: `${personId}-${suffix}`,
-  name,
-  familyName,
-  familyCode,
-  eventDateLabel: `${String(day).padStart(2, '0')} ${MONTHS[month - 1]}`,
-  eventDay: day,
-  mobile: mobile || '',
-  email: email || '',
-  actionPersonId: personId,
-})
 
 const downloadCelebrationsWorkbook = (
   monthLabel: string,
@@ -101,13 +55,6 @@ const downloadCelebrationsWorkbook = (
   XLSX.utils.book_append_sheet(workbook, birthdaysSheet, 'Birthdays')
   XLSX.utils.book_append_sheet(workbook, anniversariesSheet, 'Anniversaries')
   XLSX.writeFile(workbook, `celebrations-${monthLabel.toLowerCase()}.xlsx`)
-}
-
-const buildHonorificName = (person: Person) => {
-  const displayName = person.first_name.trim() || `${person.first_name} ${person.last_name}`.trim()
-  if (person.gender?.toLowerCase() === 'male') return `Mr ${displayName}`
-  if (person.gender?.toLowerCase() === 'female') return `Mrs ${displayName}`
-  return displayName
 }
 
 const CELEBRATIONS_VIEW_STATE_KEY = 'celebrations-view-state'
@@ -163,121 +110,72 @@ const persistCelebrationsState = (month: number, feed: CelebrationFeedType) => {
 
 export default function CelebrationsPage() {
   const router = useRouter()
-  const dispatch = useAppDispatch()
-  const families = useAppSelector(state => state.records.families)
   const [initialState] = useState(getInitialCelebrationsState)
   const [selectedMonth, setSelectedMonth] = useState<number>(initialState.month)
   const [activeFeed, setActiveFeed] = useState<CelebrationFeedType>(initialState.feed)
-  const [deleteCandidate, setDeleteCandidate] = useState<Person | null>(null)
+  const [deleteCandidate, setDeleteCandidate] = useState<{
+    id: number
+    familyId: number
+    firstName: string
+    lastName?: string
+  } | null>(null)
+  const [remoteCelebrations, setRemoteCelebrations] = useState<CelebrationsDto | null>(null)
 
-  const birthdayItems = useMemo(() => {
-    const items: CelebrationFeedItem[] = []
-
-    families.forEach(family => {
-      family.members.forEach(person => {
-        const parts = getMonthAndDay(person.date_of_birth)
-        if (!parts || parts.month !== selectedMonth) return
-
-        items.push(
-          buildCelebrationItem(
-            person.id,
-            `${person.first_name} ${person.last_name}`,
-            family.family_name,
-            family.family_code,
-            parts.day,
-            parts.month,
-            person.mobile_no,
-            person.email,
-            'birthday'
-          )
-        )
+  const loadCelebrations = (month: number) => {
+    recordsService
+      .getCelebrations(month)
+      .then(payload => {
+        setRemoteCelebrations(payload)
       })
-    })
-
-    return items.sort((a, b) => a.eventDay - b.eventDay || a.name.localeCompare(b.name))
-  }, [families, selectedMonth])
-
-  const anniversaryItems = useMemo(() => {
-    const items: CelebrationFeedItem[] = []
-
-    families.forEach(family => {
-      const groupedByMarriageDate = family.members.reduce<Record<string, Person[]>>((acc, person) => {
-        if (!person.date_of_marriage) return acc
-        const parts = getMonthAndDay(person.date_of_marriage)
-        if (!parts || parts.month !== selectedMonth) return acc
-
-        const key = `${parts.month}-${parts.day}-${person.date_of_marriage}`
-        acc[key] = [...(acc[key] || []), person]
-        return acc
-      }, {})
-
-      Object.values(groupedByMarriageDate).forEach(group => {
-        const sortedGroup = [...group].sort((a, b) => {
-          if (a.is_head !== b.is_head) return a.is_head ? -1 : 1
-          if (a.relationship_type === 'Spouse' && b.relationship_type !== 'Spouse') return 1
-          if (b.relationship_type === 'Spouse' && a.relationship_type !== 'Spouse') return -1
-          return `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`)
-        })
-
-        const primaryPerson = sortedGroup[0]
-        const parts = getMonthAndDay(primaryPerson.date_of_marriage)
-        if (!parts) return
-
-        const displayName =
-          sortedGroup.length > 1
-            ? sortedGroup.slice(0, 2).map(buildHonorificName).join(' & ')
-            : buildHonorificName(primaryPerson)
-
-        items.push(
-          buildCelebrationItem(
-            primaryPerson.id,
-            displayName,
-            family.family_name,
-            family.family_code,
-            parts.day,
-            parts.month,
-            primaryPerson.mobile_no,
-            primaryPerson.email,
-            'anniversary'
-          )
-        )
+      .catch(() => {
+        setRemoteCelebrations(null)
       })
-    })
+  }
 
-    return items.sort((a, b) => a.eventDay - b.eventDay || a.name.localeCompare(b.name))
-  }, [families, selectedMonth])
+  useEffect(() => {
+    loadCelebrations(selectedMonth)
+  }, [selectedMonth])
 
-  const selectedMonthLabel = MONTHS[selectedMonth - 1]
-  const activeItems = activeFeed === 'birthdays' ? birthdayItems : anniversaryItems
-  const peopleById = useMemo(() => {
-    const personMap = new Map<string, Person>()
-    families.forEach(family => {
-      family.members.forEach(person => {
-        personMap.set(person.id, person)
-      })
-    })
-    return personMap
-  }, [families])
+  const selectedMonthLabel = remoteCelebrations?.monthLabel || MONTHS[selectedMonth - 1]
+  const birthdaysForView = remoteCelebrations?.birthdays || []
+  const anniversariesForView = remoteCelebrations?.anniversaries || []
+  const birthdaysCount = remoteCelebrations?.birthdaysCount ?? 0
+  const anniversariesCount = remoteCelebrations?.anniversariesCount ?? 0
+  const activeItems = activeFeed === 'birthdays' ? birthdaysForView : anniversariesForView
 
   const handleDownload = () => {
-    downloadCelebrationsWorkbook(selectedMonthLabel, birthdayItems, anniversaryItems)
+    downloadCelebrationsWorkbook(selectedMonthLabel, birthdaysForView, anniversariesForView)
   }
 
-  const handleEditRecord = (personId: string) => {
+  const handleEditRecord = (personId: number, familyId: number) => {
     persistCelebrationsState(selectedMonth, activeFeed)
-    router.push(`/records/edit?id=${personId}&source=celebrations`)
+    router.push(`/records/edit?familyId=${familyId}&id=${personId}&source=celebrations`)
   }
 
-  const handleDeleteRequest = (personId: string) => {
-    const person = peopleById.get(personId)
-    if (!person) return
-    setDeleteCandidate(person)
+  const handleDeleteRequest = (personId: number, familyId: number, displayName: string) => {
+    const nameParts = displayName.split(' ').filter(Boolean)
+    const firstName = nameParts[0] || 'Record'
+    const lastName = nameParts.slice(1).join(' ')
+
+    setDeleteCandidate({
+      id: personId,
+      familyId,
+      firstName,
+      lastName,
+    })
   }
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!deleteCandidate) return
-    dispatch(deletePerson({ personId: deleteCandidate.id }))
-    setDeleteCandidate(null)
+
+    try {
+      await recordsService.deleteFamilyMember(deleteCandidate.familyId, deleteCandidate.id)
+      setDeleteCandidate(null)
+      loadCelebrations(selectedMonth)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to delete person'
+      showErrorToast(message)
+    }
   }
 
   return (
@@ -317,11 +215,11 @@ export default function CelebrationsPage() {
           <div className="celebrations-summary">
             <p>
               Number of birthdays in {selectedMonthLabel}:{' '}
-              <span className="celebrations-summary-value">{birthdayItems.length}</span>
+              <span className="celebrations-summary-value">{birthdaysCount}</span>
             </p>
             <p>
               Number of anniversaries in {selectedMonthLabel}:{' '}
-              <span className="celebrations-summary-value">{anniversaryItems.length}</span>
+              <span className="celebrations-summary-value">{anniversariesCount}</span>
             </p>
           </div>
 
