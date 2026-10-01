@@ -1,3 +1,24 @@
+import Cookies from 'js-cookie'
+
+export const AUTH_TOKEN_KEY = 'auth-token'
+
+export const getAuthToken = (): string | null => {
+  if (typeof window === 'undefined') return null
+  return Cookies.get(AUTH_TOKEN_KEY) || localStorage.getItem(AUTH_TOKEN_KEY) || null
+}
+
+export const setAuthToken = (token: string) => {
+  if (typeof window === 'undefined') return
+  Cookies.set(AUTH_TOKEN_KEY, token, { expires: 7, path: '/' })
+  localStorage.setItem(AUTH_TOKEN_KEY, token)
+}
+
+export const removeAuthToken = () => {
+  if (typeof window === 'undefined') return
+  Cookies.remove(AUTH_TOKEN_KEY, { path: '/' })
+  localStorage.removeItem(AUTH_TOKEN_KEY)
+}
+
 export type QueryValue = string | number | boolean | null | undefined
 
 export const BASE_API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'
@@ -58,11 +79,18 @@ export const apiRequest = async <T>(path: string, options: RequestOptions = {}):
   beginApiRequest()
 
   try {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+
+    const token = getAuthToken()
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+
     const response = await fetch(url, {
       method: options.method || 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
     })
 
