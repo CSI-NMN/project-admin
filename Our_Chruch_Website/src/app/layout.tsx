@@ -5,6 +5,7 @@ import Navbar from '@/components/header/Navbar'
 import GlobalApiLoader from '@/components/common/GlobalApiLoader'
 import GlobalToaster from '@/components/common/GlobalToaster'
 import ReduxProvider from '@/providers/ReduxProvider'
+import AuthProvider from '@/providers/AuthProvider'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -22,10 +23,12 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <ReduxProvider>
-          <GlobalApiLoader />
-          <GlobalToaster />
-          <Navbar />
-          <div className="pt-16">{children}</div>
+          <AuthProvider>
+            <GlobalApiLoader />
+            <GlobalToaster />
+            <Navbar />
+            <div className="pt-16">{children}</div>
+          </AuthProvider>
         </ReduxProvider>
       </body>
     </html>

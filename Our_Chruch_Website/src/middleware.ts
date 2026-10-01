@@ -5,11 +5,11 @@ export function middleware(request: NextRequest) {
 
   // Protect admin routes
   if (pathname.startsWith('/admin')) {
-    // Check for authentication token (placeholder - implement actual auth check)
-    const token = request.cookies.get('auth-token')
+    const token = request.cookies.get('auth-token')?.value
     if (!token) {
-      // Redirect to home or login page if not authenticated
-      return NextResponse.redirect(new URL('/', request.url))
+      const loginUrl = new URL('/', request.url)
+      loginUrl.searchParams.set('login', 'true')
+      return NextResponse.redirect(loginUrl)
     }
   }
 
@@ -17,5 +17,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: ['/admin', '/admin/:path*'],
 }

@@ -29,3 +29,9 @@ app:
   odata:
     default-top: 25
     max-top: 200
+  security:
+    jwt-secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+    jwt-expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+  oauth:
+    google:
+      client-id: ${GOOGLE_CLIENT_ID:}
