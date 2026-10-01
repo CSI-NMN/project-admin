@@ -8,7 +8,7 @@ import { useAppDispatch } from '@/store/hooks'
 import { setAuthSuccess } from '@/store/slices/authSlice'
 import { loginWithGoogleApi, registerApi, loginApi } from '@/store/api/authApi'
 import Link from 'next/link'
-import { GoogleLogin as GoogleLoginComponent } from '@react-oauth/google'
+
 
 export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true)
