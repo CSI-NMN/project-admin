@@ -17,6 +17,35 @@ export const loginWithGoogleApi = async (credential: string): Promise<AuthRespon
   return data
 }
 
+export const registerApi = async (params: {
+  name: string
+  email: string
+  password: string
+}): Promise<AuthResponse> => {
+  const data = await apiRequest<AuthResponse>('/api/auth/register', {
+    method: 'POST',
+    body: params,
+  })
+  if (data?.token) {
+    setAuthToken(data.token)
+  }
+  return data
+}
+
+export const loginApi = async (params: {
+  email: string
+  password: string
+}): Promise<AuthResponse> => {
+  const data = await apiRequest<AuthResponse>('/api/auth/login', {
+    method: 'POST',
+    body: params,
+  })
+  if (data?.token) {
+    setAuthToken(data.token)
+  }
+  return data
+}
+
 export const devLoginApi = async (params: {
   email: string
   name: string

@@ -14,4 +14,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByGoogleId(String googleId);
 
     boolean existsByEmail(String email);
+
+    boolean existsByRole(org.church.backend.common.entity.Role role);
 }

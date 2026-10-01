@@ -8,10 +8,13 @@ import org.church.backend.common.entity.User;
 import org.church.backend.common.security.JwtTokenProvider;
 import org.church.backend.dto.AuthResponse;
 import org.church.backend.dto.DevLoginRequest;
+import org.church.backend.dto.LoginRequest;
+import org.church.backend.dto.RegisterRequest;
 import org.church.backend.dto.UserResponse;
 import org.church.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -28,6 +31,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final JwtTokenProvider tokenProvider;
+    private final PasswordEncoder passwordEncoder;
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Value("${app.oauth.google.client-id:}")
@@ -67,6 +71,49 @@ public class AuthService {
         User user = upsertUser(email, name, picture, googleId, null);
         String token = tokenProvider.generateToken(user);
 
+        return AuthResponse.builder()
+                .token(token)
+                .user(UserResponse.fromEntity(user))
+                .build();
+    }
+
+    @Transactional
+    public AuthResponse register(RegisterRequest request) {
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException("Email is already in use");
+        }
+        
+        // Single-tenant check for ADMIN
+        if (userRepository.existsByRole(Role.ADMIN)) {
+            throw new IllegalStateException("A primary account already exists for this application.");
+        }
+
+        User newUser = User.builder()
+                .email(request.getEmail())
+                .name(request.getName())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .role(Role.ADMIN)
+                .build();
+
+        userRepository.save(newUser);
+        String token = tokenProvider.generateToken(newUser);
+
+        return AuthResponse.builder()
+                .token(token)
+                .user(UserResponse.fromEntity(newUser))
+                .build();
+    }
+
+    @Transactional
+    public AuthResponse login(LoginRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid email or password"));
+
+        if (user.getPassword() == null || !passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("Invalid email or password");
+        }
+
+        String token = tokenProvider.generateToken(user);
         return AuthResponse.builder()
                 .token(token)
                 .user(UserResponse.fromEntity(user))
@@ -116,14 +163,16 @@ public class AuthService {
             return userRepository.save(user);
         }
 
-        long userCount = userRepository.count();
+        boolean adminExists = userRepository.existsByRole(Role.ADMIN);
+        if (adminExists && explicitRole == null) {
+            throw new IllegalStateException("A primary account already exists for this application. Please contact your administrator for an invite.");
+        }
+
         Role assignedRole;
         if (explicitRole != null) {
             assignedRole = explicitRole;
-        } else if (userCount == 0 || email.toLowerCase().contains("admin")) {
-            assignedRole = Role.ADMIN;
         } else {
-            assignedRole = Role.CHURCH_MEMBER;
+            assignedRole = Role.ADMIN;
         }
 
         User newUser = User.builder()

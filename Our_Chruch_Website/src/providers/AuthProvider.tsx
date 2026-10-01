@@ -7,11 +7,9 @@ import {
   setLoading,
   setAuthSuccess,
   logout,
-  setLoginModalOpen,
 } from '@/store/slices/authSlice'
 import { fetchCurrentUserApi } from '@/store/api/authApi'
 import { getAuthToken, removeAuthToken } from '@/store/api/baseApi'
-import LoginModal from '@/components/auth/LoginModal'
 
 export default function AuthProvider({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch()
@@ -44,20 +42,11 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
     }
 
     initAuth()
-
-    // If query string has ?login=true, trigger login modal
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search)
-      if (urlParams.get('login') === 'true') {
-        dispatch(setLoginModalOpen(true))
-      }
-    }
   }, [dispatch])
 
   return (
     <GoogleOAuthProvider clientId={googleClientId}>
       {children}
-      <LoginModal />
     </GoogleOAuthProvider>
   )
 }

@@ -47,6 +47,9 @@ public class User {
     @Column(name = "\"googleId\"", length = 100)
     private String googleId;
 
+    @Column(length = 255)
+    private String password;
+
     @Column(name = "\"createdAt\"", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

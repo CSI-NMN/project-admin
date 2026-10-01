@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
-import { setLoginModalOpen, logout } from '@/store/slices/authSlice'
+import { logout } from '@/store/slices/authSlice'
 import { logoutApi } from '@/store/api/authApi'
 
 type Tab = {
@@ -162,16 +162,15 @@ export default function Navbar() {
             )}
           </div>
         ) : (
-          <button
-            type="button"
-            onClick={() => dispatch(setLoginModalOpen(true))}
+          <Link
+            href="/login"
             className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition-all shadow-sm"
           >
             <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.761H12.545z" />
             </svg>
             <span>Sign In</span>
-          </button>
+          </Link>
         )}
       </div>
     </header>
